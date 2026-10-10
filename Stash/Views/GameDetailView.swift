@@ -16,6 +16,8 @@ struct GameDetailView: View {
     @State private var confirmUninstall = false
     @State private var uninstallSize: String?
     @State private var showArtwork = false
+    /// Set to show the sound picker; true means play once a speaker is picked
+    @State private var soundPicker: Bool?
 
     private var current: Game { library[game.id] ?? game }
     private var isRunning: Bool { library.running.contains(game.id) }
@@ -48,6 +50,9 @@ struct GameDetailView: View {
                 .frame(width: 320)
         }
         .sheet(isPresented: $showArtwork) { ArtworkPicker(game: current) }
+        .sheet(isPresented: Binding(get: { soundPicker != nil }, set: { if !$0 { soundPicker = nil } })) {
+            SoundPicker(game: current, playAfter: soundPicker ?? false)
+        }
         .alert("Uninstall \(current.name)?", isPresented: $confirmUninstall) {
             Button("Cancel", role: .cancel) {}
             Button("Uninstall", role: .destructive) { library.uninstall(current) }
@@ -88,7 +93,7 @@ struct GameDetailView: View {
                         Button { library.stop(current) } label: { Label("Stop", systemImage: "stop.fill") }
                             .buttonStyle(PrimaryButtonStyle(color: Theme.ink))
                     } else {
-                        Button { library.play(game.id) } label: { Label("Play", systemImage: "play.fill") }
+                        Button(action: play) { Label("Play", systemImage: "play.fill") }
                             .buttonStyle(PrimaryButtonStyle())
                             .keyboardShortcut(.return, modifiers: [.command])
                     }
@@ -104,6 +109,9 @@ struct GameDetailView: View {
                                 library.setCover(GameLibrary.icon(for: current.executableURL), for: game.id)
                             }
                         }
+                        if current.engine == .classic {
+                            Button("Sound Output…") { soundPicker = false }
+                        }
                         Divider()
                         Button("Uninstall…", role: .destructive, action: askToUninstall)
                     } label: {
@@ -115,6 +123,15 @@ struct GameDetailView: View {
                     .card(radius: 8)
                 }
             }
+        }
+    }
+
+    /// Classic games ask which speaker to use the first time
+    private func play() {
+        if current.engine == .classic, current.audioDevice == nil {
+            soundPicker = true
+        } else {
+            library.play(game.id)
         }
     }
 

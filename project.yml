@@ -13,8 +13,8 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "0.0.4"
-    CURRENT_PROJECT_VERSION: "4"
+    MARKETING_VERSION: "0.0.5"
+    CURRENT_PROJECT_VERSION: "5"
 targets:
   Stash:
     type: application
@@ -57,10 +57,11 @@ targets:
       base:
         PRODUCT_NAME: StashAudio
         EXECUTABLE_PREFIX: lib
-        # Loaded into Wine, which runs under Rosetta
+        # Stands in for CoreAudio inside Wine's audio driver, which runs under Rosetta
         ARCHS: x86_64
         ONLY_ACTIVE_ARCH: NO
-        OTHER_LDFLAGS: -framework CoreAudio
+        LD_DYLIB_INSTALL_NAME: "@loader_path/libStashAudio.dylib"
+        OTHER_LDFLAGS: -framework CoreAudio -framework CoreFoundation -Wl,-reexport_framework,CoreAudio
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_IDENTITY: "-"
         SKIP_INSTALL: YES

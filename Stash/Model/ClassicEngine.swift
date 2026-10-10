@@ -100,7 +100,8 @@ enum ClassicEngine {
         }.value
     }
 
-    static func environment(prefix: URL, overrides: [String], fpsOverlay: Bool = false) -> [String: String] {
+    static func environment(prefix: URL, overrides: [String], fpsOverlay: Bool = false,
+                            audioDevice: String? = nil) -> [String: String] {
         var environment = ProcessInfo.processInfo.environment
         environment["WINEPREFIX"] = prefix.path(percentEncoded: false)
         environment["WINEDEBUG"] = "fixme-all"
@@ -111,6 +112,8 @@ enum ClassicEngine {
         environment["DYLD_FALLBACK_LIBRARY_PATH"] = [folder.path, bundle.appending(path: "lib").path, "/usr/lib"]
             .joined(separator: ":")
         if fpsOverlay { environment["MTL_HUD_ENABLED"] = "1" }
+        // Read by StashAudio/AudioFilter.c
+        if let audioDevice, !audioDevice.isEmpty { environment["STASH_AUDIO_DEVICE"] = audioDevice }
         return environment
     }
 
@@ -182,16 +185,39 @@ enum ClassicEngine {
     /// Wine writes this when the game process couldn't load the Mac graphics driver. The game then hangs.
     static let noGraphicsDriver = "nodrv_CreateWindow"
 
+    private static let coreAudioPath = "/System/Library/Frameworks/CoreAudio.framework/Versions/A/CoreAudio"
+    private static let audioFilterPath = "@loader_path/libStashAudio.dylib"
+
+    /// Points the engine's audio driver at Stash's CoreAudio stand-in (StashAudio/AudioFilter.c), which shows
+    /// games a single speaker. Done in place so it needs no developer tools; repeated after an engine reinstall.
+    static func installAudioFilter() throws {
+        guard let filter = StashPaths.audioFilter else { return }
+        let fileManager = FileManager.default
+        let unixFolder = bundle.appending(path: "lib/wine/x86_64-unix")
+        let installed = unixFolder.appending(path: "libStashAudio.dylib")
+        if !fileManager.contentsEqual(atPath: filter.path, andPath: installed.path) {
+            try? fileManager.removeItem(at: installed)
+            try fileManager.copyItem(at: filter, to: installed)
+        }
+
+        let driver = unixFolder.appending(path: "winecoreaudio.so")
+        var data = try Data(contentsOf: driver)
+        let original = Data(coreAudioPath.utf8)
+        guard let range = data.range(of: original) else { return }
+        let backup = unixFolder.appending(path: "winecoreaudio.so.original")
+        if !fileManager.fileExists(atPath: backup.path) { try fileManager.copyItem(at: driver, to: backup) }
+        // The load command keeps its size: the shorter path is padded with zeros
+        let replacement = Data(audioFilterPath.utf8)
+        data.replaceSubrange(range, with: replacement + Data(count: original.count - replacement.count))
+        try data.write(to: driver)
+        try Shell.run("/usr/bin/codesign", ["--force", "--sign", "-", driver.path])
+    }
+
     /// Starts a game and returns its log when it exits
     @discardableResult
     static func launch(_ program: URL, workingFolder: URL, arguments: [String] = [],
                        environment: [String: String]) async throws -> URL {
-        var environment = environment
-        if let filter = StashPaths.audioFilter {
-            environment["DYLD_INSERT_LIBRARIES"] = filter.path
-            environment["STASH_AUDIO_DEVICE"] = AudioDevices.chosenUID
-        }
-        return try await run(wine, ["start", "/wait", "/d", workingFolder.windowsPath,
+        try await run(wine, ["start", "/wait", "/d", workingFolder.windowsPath,
                                     "/unix", program.path(percentEncoded: false)] + arguments,
                              environment: environment, stuckMarker: noGraphicsDriver)
     }

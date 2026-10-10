@@ -17,6 +17,7 @@
 		42AFECE002C2E6E4B1DB767C /* GameDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC302346BF5FC5A9225C3868 /* GameDetailView.swift */; };
 		4ABC5F74D2C361C0431B2911 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FE48DBAB68E9E944D7AA11A7 /* Assets.xcassets */; };
 		51366B1C87E7F68D7B885CBC /* GamePanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23815FE39A5B87070A7690CB /* GamePanels.swift */; };
+		53BE35DDBCABB525D05BD802 /* SoundPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79EFBE932EC0038F0FEB92E5 /* SoundPicker.swift */; };
 		56DEB7B0A547083BA232FD8C /* GameLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = C35AB90BCC65F4CEF67D2AC5 /* GameLibrary.swift */; };
 		621971823A54B77467B2ACCE /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD92EA1D2AD6CB0187E8E15C /* OnboardingView.swift */; };
 		7B687031D8E1102CA8FFE4DE /* StashAudio.dylib in Resources */ = {isa = PBXBuildFile; fileRef = B20E8E8AC51BDD16A930CC33 /* StashAudio.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -53,6 +54,7 @@
 		33353C9DDF31427453046C99 /* AudioFilter.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = AudioFilter.c; sourceTree = "<group>"; };
 		4CDE953D9C31D87F9FFE6A5E /* ConsoleEngines.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleEngines.swift; sourceTree = "<group>"; };
 		5F091F853C4981235ECADAF3 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		79EFBE932EC0038F0FEB92E5 /* SoundPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPicker.swift; sourceTree = "<group>"; };
 		7EDE672E25B8A2578B9888FF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		814402B58E414F6E9163E3E3 /* ModInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModInstaller.swift; sourceTree = "<group>"; };
 		B20E8E8AC51BDD16A930CC33 /* StashAudio.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = StashAudio.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -161,6 +163,7 @@
 				7EDE672E25B8A2578B9888FF /* RootView.swift */,
 				F3BFE30BEA627EB8AB7EB8BE /* SettingsView.swift */,
 				C4C67414020F63ED2BA86DAD /* SidebarView.swift */,
+				79EFBE932EC0038F0FEB92E5 /* SoundPicker.swift */,
 				5F091F853C4981235ECADAF3 /* Theme.swift */,
 			);
 			path = Views;
@@ -291,6 +294,7 @@
 				CEDF86366A51D66AEE41FBFD /* RuntimeManager.swift in Sources */,
 				280D27CD05B87EAD345A0C7D /* SettingsView.swift in Sources */,
 				9ECC56C74BB3AAF87EF89275 /* SidebarView.swift in Sources */,
+				53BE35DDBCABB525D05BD802 /* SoundPicker.swift in Sources */,
 				B790160B7DAAC2FA787342DD /* StashApp.swift in Sources */,
 				DABA39FE937266FAC9AB132B /* Support.swift in Sources */,
 				DAABCECA7F68D9A8CC79B12C /* Theme.swift in Sources */,
@@ -336,12 +340,13 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				EXECUTABLE_PREFIX = lib;
+				LD_DYLIB_INSTALL_NAME = "@loader_path/libStashAudio.dylib";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = "-framework CoreAudio";
+				OTHER_LDFLAGS = "-framework CoreAudio -framework CoreFoundation -Wl,-reexport_framework,CoreAudio";
 				PRODUCT_BUNDLE_IDENTIFIER = app.stash.StashAudio;
 				PRODUCT_NAME = StashAudio;
 				SDKROOT = macosx;
@@ -403,7 +408,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -422,7 +427,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.0.4;
+				MARKETING_VERSION = 0.0.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -442,12 +447,13 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				EXECUTABLE_PREFIX = lib;
+				LD_DYLIB_INSTALL_NAME = "@loader_path/libStashAudio.dylib";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = "-framework CoreAudio";
+				OTHER_LDFLAGS = "-framework CoreAudio -framework CoreFoundation -Wl,-reexport_framework,CoreAudio";
 				PRODUCT_BUNDLE_IDENTIFIER = app.stash.StashAudio;
 				PRODUCT_NAME = StashAudio;
 				SDKROOT = macosx;
@@ -489,7 +495,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -502,7 +508,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.0.4;
+				MARKETING_VERSION = 0.0.5;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

@@ -15,8 +15,6 @@ struct SettingsView: View {
     @State private var artworkKey = ""
     @State private var artworkStatus: String?
     @State private var checkingKey = false
-    @AppStorage(AudioDevices.settingKey) private var audioDevice = ""
-    @State private var audioOutputs: [AudioOutputDevice] = []
 
     var body: some View {
         Form {
@@ -33,20 +31,6 @@ struct SettingsView: View {
                         }
                     }
                 }
-            }
-            Section("Sound") {
-                Picker("Classic games play through", selection: $audioDevice) {
-                    Text("Automatic").tag("")
-                    ForEach(audioOutputs) { device in
-                        Text(device.isSupported ? device.name : "\(device.name) (may not work)").tag(device.uid)
-                    }
-                    if !audioDevice.isEmpty, !audioOutputs.contains(where: { $0.uid == audioDevice }) {
-                        Text("Disconnected device").tag(audioDevice)
-                    }
-                }
-                Text(soundNote)
-                    .font(.system(size: 11))
-                    .foregroundStyle(selectedOutput?.isSupported == false ? Color.orange : Theme.muted)
             }
             Section("Artwork") {
                 LabeledContent("SteamGridDB API key") {
@@ -118,23 +102,6 @@ struct SettingsView: View {
         .task {
             engineVersion = (try? await Wine.wineVersion()) ?? "Not installed"
         }
-        .onAppear { audioOutputs = AudioDevices.outputs() }
-    }
-
-    private var selectedOutput: AudioOutputDevice? {
-        audioOutputs.first { $0.uid == audioDevice }
-    }
-
-    private var soundNote: String {
-        if selectedOutput?.isSupported == false {
-            return "Virtual and combined devices like this one can make games close as they start. "
-                + "If that happens, switch back to Automatic."
-        }
-        if !audioDevice.isEmpty, selectedOutput == nil {
-            return "This device isn't connected, so games use your Mac's speaker."
-        }
-        return "Automatic uses your Mac's sound output, or the built-in speakers when that's a virtual device. "
-            + "Games see this one device only, no microphones."
     }
 
     private func saveKey() {

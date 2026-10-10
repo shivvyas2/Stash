@@ -300,9 +300,10 @@ final class GameLibrary: ObservableObject {
         overrides += current.dllOverrides.map { "\($0)=n,b" }
         let arguments = current.arguments.split { $0.isWhitespace }.map(String.init)
         let environment = ClassicEngine.environment(prefix: current.environmentURL, overrides: overrides,
-                                                    fpsOverlay: current.fpsOverlay)
+                                                    fpsOverlay: current.fpsOverlay, audioDevice: current.audioDevice)
+        try ClassicEngine.installAudioFilter()
 
-        // Startup on this engine fails now and then (sound or graphics driver), so try a few times quietly
+        // Startup on this engine fails now and then, so try a few times quietly
         let attempts = 3
         for attempt in 1...attempts {
             let started = Date()
@@ -325,6 +326,11 @@ final class GameLibrary: ObservableObject {
                 if preparing[game.id] == status { preparing[game.id] = nil }
             }
         }
+    }
+
+    /// `uid` empty means automatic
+    func setAudioDevice(_ uid: String, for id: Game.ID) {
+        update(id) { $0.audioDevice = uid }
     }
 
     /// Switching a game to the modern engine is not offered: an upgraded prefix can't go back to Wine 7.7

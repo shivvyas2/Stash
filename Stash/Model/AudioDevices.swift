@@ -2,8 +2,8 @@
 //  AudioDevices.swift
 //  Stash
 //
-//  The Mac's speakers and headphones, for choosing where classic games play sound.
-//  The choice reaches StashAudio/AudioFilter.c as STASH_AUDIO_DEVICE.
+//  The Mac's speakers and headphones, for choosing where a classic game plays sound.
+//  The choice is saved on the game and reaches StashAudio/AudioFilter.c as STASH_AUDIO_DEVICE.
 //
 
 import CoreAudio
@@ -19,14 +19,6 @@ struct AudioOutputDevice: Identifiable, Hashable {
 }
 
 enum AudioDevices {
-    /// The UserDefaults key for the chosen device's UID. Empty means automatic.
-    static let settingKey = "gameAudioDevice"
-
-    static var chosenUID: String? {
-        let uid = UserDefaults.standard.string(forKey: settingKey) ?? ""
-        return uid.isEmpty ? nil : uid
-    }
-
     static func outputs() -> [AudioOutputDevice] {
         var address = AudioObjectPropertyAddress(
             mSelector: kAudioHardwarePropertyDevices,

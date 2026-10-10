@@ -82,6 +82,8 @@ struct Game: Codable, Identifiable, Hashable {
     var graphics: GraphicsMode = .metal
     var retina: Bool = true
     var fpsOverlay: Bool = false
+    /// Classic games: UID of the speaker picked at first launch. Empty means automatic, nil means not asked yet.
+    var audioDevice: String?
     var windowsVersion: WinVersion = .win10
     /// Consoles: internal render resolution multiplier (1 = original)
     var upscale: Int = 3
@@ -126,6 +128,7 @@ struct Game: Codable, Identifiable, Hashable {
         graphics = value(.graphics, GraphicsMode.metal)
         retina = value(.retina, true)
         fpsOverlay = value(.fpsOverlay, false)
+        audioDevice = value(.audioDevice, String?.none)
         windowsVersion = value(.windowsVersion, WinVersion.win10)
         upscale = value(.upscale, 3)
         widescreen = value(.widescreen, true)
