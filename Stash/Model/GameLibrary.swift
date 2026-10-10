@@ -89,9 +89,13 @@ final class GameLibrary: ObservableObject {
             name: installer.lastPathComponent,
             args: ["start", "/wait", "/d", installer.deletingLastPathComponent().windowsPath,
                    "/unix", installer.path(percentEncoded: false)],
-            bottle: bottle
+            bottle: bottle,
+            environment: ["WINEDLLOVERRIDES": Self.quietOverrides]
         ) { }
     }
+
+    /// No crash dialogs (a crash ends the game) and no Start-menu shortcuts copied onto the Mac
+    static let quietOverrides = "winedbg.exe,winemenubuilder.exe=d"
 
     /// Executables inside `folder` that are likely the game, best guess first
     nonisolated static func findExecutables(in folder: URL) -> [URL] {
@@ -171,20 +175,55 @@ final class GameLibrary: ObservableObject {
         return game
     }
 
-    func remove(_ game: Game, deleteFiles: Bool) {
+    /// True when the game lives in a folder Stash created, rather than a file the player still owns
+    nonisolated static func ownsFiles(of game: Game) -> Bool {
+        !game.platform.isConsole || game.environmentPath != game.executablePath
+    }
+
+    /// Mac apps Stash exported for this game, found by the game id in their launcher
+    nonisolated static func macApps(for game: Game) -> [URL] {
+        let folders = [StashPaths.defaultAppsLocation, URL(fileURLWithPath: "/Applications"),
+                       FileManager.default.homeDirectoryForCurrentUser.appending(path: "Desktop")]
+        return folders.flatMap { folder -> [URL] in
+            let apps = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? []
+            return apps.filter { app in
+                guard app.pathExtension == "app",
+                      let script = try? String(contentsOf: app.appending(path: "Contents/MacOS/launch"), encoding: .utf8)
+                else { return false }
+                return script.contains("stash://play/\(game.id.uuidString)")
+            }
+        }
+    }
+
+    /// Removes the game and everything Stash made for it. Files go to the Trash in one step.
+    func uninstall(_ game: Game) {
         if running.contains(game.id) { stop(game) }
+        var trash = Self.macApps(for: game)
+        if Self.ownsFiles(of: game) { trash.append(game.environmentURL) }
+
         games.removeAll { $0.id == game.id }
         bottles[game.id] = nil
+        if selection == game.id { selection = nil }
         save()
-        try? FileManager.default.removeItem(at: StashPaths.cover(for: game.id))
-        try? FileManager.default.removeItem(at: StashPaths.backups.appending(path: game.id.uuidString))
+
+        let fileManager = FileManager.default
+        try? fileManager.removeItem(at: StashPaths.cover(for: game.id))
+        try? fileManager.removeItem(at: StashPaths.backups.appending(path: game.id.uuidString))
         for engine in ["pcsx2", "ppsspp"] {
-            try? FileManager.default.removeItem(at: StashPaths.engines.appending(path: "\(engine)-\(game.id.uuidString).ini"))
+            try? fileManager.removeItem(at: StashPaths.engines.appending(path: "\(engine)-\(game.id.uuidString).ini"))
         }
-        if deleteFiles {
-            NSWorkspace.shared.recycle([game.environmentURL])
+        let existing = trash.filter { fileManager.fileExists(atPath: $0.path) }
+        guard !existing.isEmpty else { return }
+        // Give Wine a moment to release the folder after stopping a running game
+        Task {
+            try? await Task.sleep(for: .seconds(1))
+            NSWorkspace.shared.recycle(existing) { _, error in
+                guard let error else { return }
+                Task { @MainActor in
+                    self.lastError = "Some files couldn't be moved to the Trash: \(error.localizedDescription)"
+                }
+            }
         }
-        if selection == game.id { selection = games.first?.id }
     }
 
     // MARK: - Playing
@@ -205,8 +244,7 @@ final class GameLibrary: ObservableObject {
         bottle.settings.dxvk = game.graphics == .dxvk
         bottle.settings.enhancedSync = .msync
 
-        // No Wine crash dialogs: a crash should end the game, not leave a debugger window behind
-        var overrides = ["winedbg.exe=d"]
+        var overrides = [Self.quietOverrides]
         if game.graphics == .dxvk { overrides.append("dxgi,d3d9,d3d10core,d3d11=n,b") }
         overrides += game.dllOverrides.map { "\($0)=n,b" }
         let environment = ["WINEDLLOVERRIDES": overrides.joined(separator: ";")]

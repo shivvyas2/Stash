@@ -17,6 +17,7 @@ Add a game from an installer, a disc image, a folder or a console game file, and
 - **Cover art** from SteamGridDB, fetched automatically when a game is added.
 - **Mac apps.** Any game can be exported as a `.app` for Launchpad, the Dock or Spotlight.
 - **Playtime tracking** with a weekly chart and session history.
+- **Clean uninstall.** One confirmation moves the game, its saves and settings, and any Mac app made for it to the Trash. Games and installers can't scatter shortcuts across your Mac, and a crashing game closes instead of leaving Wine error windows behind.
 
 ## Requirements
 

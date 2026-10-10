@@ -13,7 +13,8 @@ struct GameDetailView: View {
 
     enum Tab: String, CaseIterable { case enhancements = "Enhancements", graphics = "Graphics", files = "Files" }
     @State private var tab: Tab = .enhancements
-    @State private var confirmRemove = false
+    @State private var confirmUninstall = false
+    @State private var uninstallSize: String?
     @State private var showArtwork = false
 
     private var current: Game { library[game.id] ?? game }
@@ -47,13 +48,11 @@ struct GameDetailView: View {
                 .frame(width: 320)
         }
         .sheet(isPresented: $showArtwork) { ArtworkPicker(game: current) }
-        .confirmationDialog("Remove \(current.name)?", isPresented: $confirmRemove) {
-            Button("Remove from Stash") { library.remove(current, deleteFiles: false) }
-            Button("Remove and Move Game Files to Trash", role: .destructive) {
-                library.remove(current, deleteFiles: true)
-            }
+        .alert("Uninstall \(current.name)?", isPresented: $confirmUninstall) {
+            Button("Cancel", role: .cancel) {}
+            Button("Uninstall", role: .destructive) { library.uninstall(current) }
         } message: {
-            Text("Game files live in \(current.environmentPath).")
+            Text(uninstallMessage)
         }
     }
 
@@ -106,7 +105,7 @@ struct GameDetailView: View {
                             }
                         }
                         Divider()
-                        Button("Remove Game…", role: .destructive) { confirmRemove = true }
+                        Button("Uninstall…", role: .destructive, action: askToUninstall)
                     } label: {
                         Image(systemName: "ellipsis")
                     }
@@ -159,6 +158,28 @@ struct GameDetailView: View {
                 .lineLimit(1).minimumScaleFactor(0.6)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: Uninstall
+
+    private var uninstallMessage: String {
+        let size = uninstallSize.map { " and frees \($0)" } ?? ""
+        if GameLibrary.ownsFiles(of: current) {
+            return "This moves the game, its saves and settings, and any Mac app made for it to the Trash\(size)."
+        }
+        return "This removes the game from Stash along with its settings and Mac app. "
+            + "Your game file stays where it is."
+    }
+
+    private func askToUninstall() {
+        uninstallSize = nil
+        confirmUninstall = true
+        guard GameLibrary.ownsFiles(of: current) else { return }
+        let folder = current.environmentURL
+        Task {
+            let bytes = await Task.detached { folder.folderSize }.value
+            uninstallSize = ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
+        }
     }
 
     // MARK: Cover helpers
