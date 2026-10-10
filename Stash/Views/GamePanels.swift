@@ -27,7 +27,11 @@ private struct SectionHeading: View {
 struct EnhancementsPanel: View {
     let game: Game
 
-    private var mods: [ModPackage] { game.knownGame?.mods.compactMap(ModPackage.byID) ?? [] }
+    private var mods: [ModPackage] {
+        var mods = game.knownGame?.mods.compactMap(ModPackage.byID) ?? []
+        if game.engine == .classic, let api = game.legacyAPI { mods.insert(ModPackage.scaling(for: api), at: 0) }
+        return mods
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -174,10 +178,16 @@ struct GraphicsPanel: View {
                                                 set: { value in library.update(game.id) { $0.widescreen = value } }))
                 }
             } else {
-                SectionHeading(title: "Renderer")
-                OptionStrip(options: GraphicsMode.allCases.map { ($0, $0.title, $0.detail) },
-                            selection: game.graphics) { value in library.update(game.id) { $0.graphics = value } }
+                SectionHeading(title: "Engine")
+                OptionStrip(options: WineEngine.allCases.map { ($0, $0.title, $0.detail) },
+                            selection: game.engine, select: chooseEngine)
                     .padding(.bottom, 28)
+                if game.engine == .modern {
+                    SectionHeading(title: "Renderer")
+                    OptionStrip(options: GraphicsMode.allCases.map { ($0, $0.title, $0.detail) },
+                                selection: game.graphics) { value in library.update(game.id) { $0.graphics = value } }
+                        .padding(.bottom, 28)
+                }
                 Hairline()
                 SettingToggle(title: "High resolution (Retina)",
                               detail: "Render at your display's full pixel density instead of upscaling",
@@ -213,6 +223,16 @@ struct GraphicsPanel: View {
                 Hairline()
             }
         }
+    }
+
+    private func chooseEngine(_ engine: WineEngine) {
+        let upgraded = FileManager.default.fileExists(atPath: game.environmentURL.appending(path: ".stash-classic").path)
+        if engine == .modern && upgraded {
+            library.lastError = "\(game.name) has already been set up for the classic engine and can't switch back. "
+                + "To try the modern engine, uninstall the game and add it again."
+            return
+        }
+        library.setEngine(engine, for: game.id)
     }
 
     private func label(_ title: String, _ detail: String) -> some View {
@@ -297,7 +317,7 @@ struct FilesPanel: View {
         runningTool = true
         Task {
             do {
-                try await library.runInstaller(url, environment: game.environmentURL)
+                try await library.runInstaller(url, environment: game.environmentURL, engine: game.engine)
             } catch {
                 library.lastError = error.localizedDescription
             }

@@ -69,6 +69,14 @@ struct ModToggle: Identifiable {
     var id: String { "\(file)#\(section).\(key)" }
 }
 
+/// A value Stash writes into a mod's INI file after installing it
+struct ModSetting {
+    let file: String
+    let section: String
+    let key: String
+    let value: String
+}
+
 struct ModPackage: Identifiable {
     let id: String
     let title: String
@@ -81,10 +89,44 @@ struct ModPackage: Identifiable {
     /// Original files to preserve under a new name before installing (from → to)
     var preserve: [String: String] = [:]
     var toggles: [ModToggle] = []
+    var settings: [ModSetting] = []
     /// Ships the ASI loader that the other mods need in order to load
     var providesLoader: Bool { id.hasPrefix("widescreen-") }
 
-    static func byID(_ id: String) -> ModPackage? { all.first { $0.id == id } }
+    static func byID(_ id: String) -> ModPackage? { (all + scaling).first { $0.id == id } }
+
+    /// dxwrapper, set to run the game in a window that is stretched to fill the display.
+    /// The game never changes the Mac's screen mode, which most Mac displays can't do for 640×480.
+    static let scaling: [ModPackage] = LegacyAPI.allCases.map { api in
+        let ini = "dxwrapper.ini"
+        let package: String
+        var settings = [
+            ModSetting(file: ini, section: "d3d9", key: "EnableWindowMode", value: "1"),
+            ModSetting(file: ini, section: "FullScreen", key: "FullScreen", value: "1"),
+            ModSetting(file: ini, section: "FullScreen", key: "ForceWindowResize", value: "1"),
+            ModSetting(file: ini, section: "FullScreen", key: "WaitForWindowChanges", value: "1")
+        ]
+        switch api {
+        case .ddraw:
+            package = "dx7"
+            settings.append(ModSetting(file: ini, section: "Compatibility", key: "Dd7to9", value: "1"))
+        case .d3d8:
+            package = "dx8"
+            settings.append(ModSetting(file: ini, section: "Compatibility", key: "D3d8to9", value: "1"))
+        case .d3d9:
+            package = "dx9"
+            settings.append(ModSetting(file: ini, section: "Compatibility", key: "EnableD3d9Wrapper", value: "1"))
+        }
+        return ModPackage(
+            id: "scaling-\(api.rawValue)", title: "Full-screen scaling",
+            summary: "Runs the game at its own resolution and scales it to fill your display",
+            url: URL(string: "https://github.com/elishacloud/dxwrapper/releases/download/v1.8.8600.25/\(package).games.zip")!,
+            dllOverride: api.dll,
+            settings: settings
+        )
+    }
+
+    static func scaling(for api: LegacyAPI) -> ModPackage { byID("scaling-\(api.rawValue)")! }
 
     private static let widescreen = "https://github.com/ThirteenAG/WidescreenFixesPack/releases/download/"
     private static let silentPatch = "https://github.com/CookiePLMonster/SilentPatch/releases/download/1.1-BUILD34.1-SA/"

@@ -69,6 +69,10 @@ enum ModInstaller {
             try fileManager.copyItem(at: source, to: target)
         }
 
+        for setting in mod.settings {
+            try IniFile.upsert(file: gameFolder.appending(path: setting.file),
+                               section: setting.section, key: setting.key, value: setting.value)
+        }
         try JSONEncoder().encode(manifest).write(to: backup.appending(path: "manifest.json"))
     }
 

@@ -76,6 +76,9 @@ struct Game: Codable, Identifiable, Hashable {
     var arguments: String = ""
     var knownGameID: String?
 
+    var engine: WineEngine = .modern
+    /// Set for 32-bit DirectX 7/8/9 games, which get full-screen scaling on the classic engine
+    var legacyAPI: LegacyAPI?
     var graphics: GraphicsMode = .metal
     var retina: Bool = true
     var fpsOverlay: Bool = false
@@ -112,6 +115,14 @@ struct Game: Codable, Identifiable, Hashable {
         platform = value(.platform, Platform.windows)
         arguments = value(.arguments, "")
         knownGameID = value(.knownGameID, String?.none)
+        // Games added before the classic engine existed are detected from their executable
+        if container.contains(.engine) {
+            engine = value(.engine, WineEngine.modern)
+            legacyAPI = value(.legacyAPI, LegacyAPI?.none)
+        } else if platform == .windows {
+            legacyAPI = LegacyAPI.detect(in: URL(fileURLWithPath: executablePath))
+            engine = legacyAPI == nil ? .modern : .classic
+        }
         graphics = value(.graphics, GraphicsMode.metal)
         retina = value(.retina, true)
         fpsOverlay = value(.fpsOverlay, false)

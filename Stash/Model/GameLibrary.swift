@@ -16,6 +16,8 @@ final class GameLibrary: ObservableObject {
     /// Mod ids currently being installed or removed, per game
     @Published private(set) var modsInFlight: [Game.ID: Set<String>] = [:]
     @Published var lastError: String?
+    /// What a game is doing before it starts, e.g. downloading the classic engine
+    @Published private(set) var preparing: [Game.ID: String] = [:]
     /// Games whose cover art is being fetched
     @Published private(set) var fetchingArtwork: Set<Game.ID> = []
 
@@ -83,7 +85,14 @@ final class GameLibrary: ObservableObject {
     }
 
     /// Runs a Windows installer (.exe or .msi) inside an environment and waits for it to exit
-    func runInstaller(_ installer: URL, environment: URL) async throws {
+    func runInstaller(_ installer: URL, environment: URL, engine: WineEngine = .modern) async throws {
+        if engine == .classic {
+            try await ClassicEngine.prepare(prefix: environment)
+            try await ClassicEngine.launch(installer, workingFolder: installer.deletingLastPathComponent(),
+                                           environment: ClassicEngine.environment(prefix: environment,
+                                                                                  overrides: [Self.quietOverrides]))
+            return
+        }
         let bottle = Bottle(bottleUrl: environment, isAvailable: true)
         for await _ in try Wine.runWineProcess(
             name: installer.lastPathComponent,
@@ -131,12 +140,14 @@ final class GameLibrary: ObservableObject {
 
     @discardableResult
     func addGame(name: String, environment: URL, executable: URL, cover: NSImage?) -> Game {
-        let game = Game(
+        var game = Game(
             name: name,
             environmentPath: environment.path(percentEncoded: false),
             executablePath: executable.path(percentEncoded: false),
             knownGameID: KnownGame.matching(executable: executable)?.id
         )
+        game.legacyAPI = LegacyAPI.detect(in: executable)
+        game.engine = game.legacyAPI == nil ? .modern : .classic
         games.append(game)
         save()
         setCover(cover ?? Self.icon(for: executable), for: game.id)
@@ -238,6 +249,10 @@ final class GameLibrary: ObservableObject {
             track(id) { try await self.engines.run(game) }
             return
         }
+        if game.engine == .classic {
+            track(id) { try await self.playClassic(game) }
+            return
+        }
 
         let bottle = bottle(for: game)
         bottle.settings.metalHud = game.fpsOverlay
@@ -260,6 +275,37 @@ final class GameLibrary: ObservableObject {
                 bottle: bottle, environment: environment
             ) { }
         }
+    }
+
+    private func playClassic(_ game: Game) async throws {
+        defer { preparing[game.id] = nil }
+        if !ClassicEngine.isInstalled {
+            preparing[game.id] = "Downloading the classic engine (about 260 MB, first time only)…"
+            try await ClassicEngine.install()
+        }
+        preparing[game.id] = "Getting \(game.name) ready…"
+        try await ClassicEngine.prepare(prefix: game.environmentURL)
+        if let api = game.legacyAPI, game.installedMods[ModPackage.scaling(for: api).id] == nil {
+            let scaling = ModPackage.scaling(for: api)
+            try await ModInstaller.install(scaling, into: game)
+            update(game.id) { $0.installedMods[scaling.id] = Date() }
+        }
+        preparing[game.id] = nil
+
+        let current = self[game.id] ?? game
+        var overrides = [Self.quietOverrides]
+        overrides += current.dllOverrides.map { "\($0)=n,b" }
+        let arguments = current.arguments.split { $0.isWhitespace }.map(String.init)
+        try await ClassicEngine.launch(
+            current.executableURL, workingFolder: current.gameFolderURL, arguments: arguments,
+            environment: ClassicEngine.environment(prefix: current.environmentURL, overrides: overrides,
+                                                   fpsOverlay: current.fpsOverlay)
+        )
+    }
+
+    /// Switching a game to the modern engine is not offered: an upgraded prefix can't go back to Wine 7.7
+    func setEngine(_ engine: WineEngine, for id: Game.ID) {
+        update(id) { $0.engine = engine }
     }
 
     /// Marks a game as running for the duration of `session` and records the playtime
@@ -307,6 +353,8 @@ final class GameLibrary: ObservableObject {
     func stop(_ game: Game) {
         if game.platform.isConsole {
             engines.stop(game)
+        } else if game.engine == .classic {
+            ClassicEngine.stop(prefix: game.environmentURL)
         } else {
             try? Wine.killBottle(bottle: bottle(for: game))
         }
@@ -316,6 +364,13 @@ final class GameLibrary: ObservableObject {
         guard let game = self[id] else { return }
         update(id) { $0.retina = enabled }
         guard !game.platform.isConsole else { return }
+        if game.engine == .classic {
+            Task {
+                try? await ClassicEngine.setRegistry(prefix: game.environmentURL, key: #"HKCU\Software\Wine\Mac Driver"#,
+                                                     name: "RetinaMode", value: enabled ? "y" : "n")
+            }
+            return
+        }
         let bottle = bottle(for: game)
         Task { try? await Wine.changeRetinaMode(bottle: bottle, retinaMode: enabled) }
     }
@@ -323,6 +378,10 @@ final class GameLibrary: ObservableObject {
     func setWindowsVersion(_ version: WinVersion, for id: Game.ID) {
         guard let game = self[id] else { return }
         update(id) { $0.windowsVersion = version }
+        if game.engine == .classic {
+            Task { try? await ClassicEngine.setWindowsVersion(prefix: game.environmentURL, version) }
+            return
+        }
         let bottle = bottle(for: game)
         bottle.settings.windowsVersion = version
         Task { _ = try? await Wine.changeWinVersion(bottle: bottle, win: version) }
@@ -394,8 +453,9 @@ final class GameLibrary: ObservableObject {
 
     /// Downloads a cover from SteamGridDB when a key is set. Quietly does nothing otherwise.
     func fetchArtwork(for id: Game.ID, replacing: Bool = false) {
-        guard ArtworkService.isConfigured, let game = self[id], !fetchingArtwork.contains(id),
-              replacing || !hasArtwork(id) else { return }
+        // Check the cover first so a game that has art never touches the Keychain
+        guard let game = self[id], !fetchingArtwork.contains(id), replacing || !hasArtwork(id),
+              ArtworkService.isConfigured else { return }
         fetchingArtwork.insert(id)
         Task {
             if let image = try? await ArtworkService.bestCover(for: game.knownGame?.title ?? game.name) {

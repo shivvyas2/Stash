@@ -119,6 +119,7 @@ struct GameDetailView: View {
     }
 
     private var subtitle: String {
+        if let status = library.preparing[game.id] { return status }
         if isRunning { return "Playing now" }
         if let last = current.lastPlayed { return "Last played \(last.formatted(.relative(presentation: .named)))" }
         return "Ready to play"
@@ -137,7 +138,7 @@ struct GameDetailView: View {
                 divider
                 stat("Aspect", current.widescreen ? "16:9" : "4:3")
             } else {
-                stat("Renderer", current.graphics == .metal ? "Metal" : "DXVK")
+                stat("Engine", current.engine == .classic ? "Classic" : (current.graphics == .metal ? "Metal" : "DXVK"))
                 divider
                 stat("Upgrades", "\(current.installedMods.count)")
             }
