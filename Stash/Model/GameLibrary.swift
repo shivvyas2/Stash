@@ -205,11 +205,11 @@ final class GameLibrary: ObservableObject {
         bottle.settings.dxvk = game.graphics == .dxvk
         bottle.settings.enhancedSync = .msync
 
-        var overrides: [String] = []
+        // No Wine crash dialogs: a crash should end the game, not leave a debugger window behind
+        var overrides = ["winedbg.exe=d"]
         if game.graphics == .dxvk { overrides.append("dxgi,d3d9,d3d10core,d3d11=n,b") }
         overrides += game.dllOverrides.map { "\($0)=n,b" }
-        var environment: [String: String] = [:]
-        if !overrides.isEmpty { environment["WINEDLLOVERRIDES"] = overrides.joined(separator: ";") }
+        let environment = ["WINEDLLOVERRIDES": overrides.joined(separator: ";")]
 
         let arguments = game.arguments.split { $0.isWhitespace }.map(String.init)
         track(id) {
@@ -237,11 +237,33 @@ final class GameLibrary: ObservableObject {
             }
             running.remove(id)
             let duration = Date().timeIntervalSince(start)
+            if !game.platform.isConsole, duration < 60, let log = Self.crashLog(since: start) {
+                lastError = "\(game.name) crashed while starting. The details are in \(log.path(percentEncoded: false))."
+            }
             update(id) { game in
                 game.lastPlayed = start
                 if duration > 30 { game.sessions.append(PlaySession(start: start, duration: duration)) }
             }
         }
+    }
+
+    /// The newest Wine log written since `date`, if it records a crash
+    nonisolated static func crashLog(since date: Date) -> URL? {
+        let logs = (try? FileManager.default.contentsOfDirectory(
+            at: Wine.logsFolder, includingPropertiesForKeys: [.contentModificationDateKey]
+        )) ?? []
+        let recent = logs.filter {
+            ((try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast) >= date
+        }
+        let markers = ["Unhandled page fault", "Unhandled exception", "Assertion failed"]
+        return recent.first { log in
+            guard let text = try? String(contentsOf: log, encoding: .utf8) else { return false }
+            return markers.contains(where: text.contains)
+        }
+    }
+
+    func stopAll() {
+        running.compactMap { self[$0] }.forEach(stop)
     }
 
     func stop(_ game: Game) {

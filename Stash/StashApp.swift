@@ -22,7 +22,10 @@ struct StashApp: App {
                 .environmentObject(runtime)
                 .preferredColorScheme(.light)
                 .frame(minWidth: 1080, minHeight: 700)
-                .task { appDelegate.urlHandler = library.handle(url:) }
+                .task {
+                    appDelegate.urlHandler = library.handle(url:)
+                    appDelegate.terminationHandler = library.stopAll
+                }
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1280, height: 820)
@@ -55,6 +58,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             pending.forEach(urlHandler)
             pending.removeAll()
         }
+    }
+
+    /// Games started from Stash close with it
+    var terminationHandler: (() -> Void)?
+
+    func applicationWillTerminate(_ notification: Notification) {
+        terminationHandler?()
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
