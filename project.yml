@@ -1,0 +1,45 @@
+name: Stash
+options:
+  bundleIdPrefix: app.stash
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+packages:
+  WhiskyKit:
+    path: WhiskyKit
+  SemanticVersion:
+    url: https://github.com/SwiftPackageIndex/SemanticVersion.git
+    from: 0.3.0
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.0.1"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  Stash:
+    type: application
+    platform: macOS
+    sources:
+      - path: Stash
+    dependencies:
+      - package: WhiskyKit
+      - package: SemanticVersion
+    info:
+      path: Stash/Info.plist
+      properties:
+        CFBundleDisplayName: Stash
+        LSApplicationCategoryType: public.app-category.games
+        LSMinimumSystemVersion: "14.0"
+        NSHumanReadableCopyright: "GPL-3.0. Built on Whisky, Wine and Apple's Game Porting Toolkit."
+        CFBundleURLTypes:
+          - CFBundleURLName: app.stash.Stash
+            CFBundleURLSchemes: [stash]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.stash.Stash
+        PRODUCT_NAME: Stash
+        ENABLE_HARDENED_RUNTIME: NO
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor

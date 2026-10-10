@@ -1,0 +1,457 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		13450032A98171E81DB0B700 /* Catalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = C99D2D2A6F9740ED53280D36 /* Catalog.swift */; };
+		1459C82357CEFF47ED1159FF /* ArtworkPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F8B73046F58ABB5377C370 /* ArtworkPicker.swift */; };
+		19C440A4D690582764F7057E /* AddGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2AE61AC5EA1512CE4C7A4BC /* AddGameView.swift */; };
+		1DA9EF8ADF9613E7EA5027BB /* ModInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 814402B58E414F6E9163E3E3 /* ModInstaller.swift */; };
+		280D27CD05B87EAD345A0C7D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3BFE30BEA627EB8AB7EB8BE /* SettingsView.swift */; };
+		365C683A0E55DD701874AB7E /* SemanticVersion in Frameworks */ = {isa = PBXBuildFile; productRef = 2BE5A0C8E711E2D65D9DF956 /* SemanticVersion */; };
+		42AFECE002C2E6E4B1DB767C /* GameDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC302346BF5FC5A9225C3868 /* GameDetailView.swift */; };
+		4ABC5F74D2C361C0431B2911 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FE48DBAB68E9E944D7AA11A7 /* Assets.xcassets */; };
+		51366B1C87E7F68D7B885CBC /* GamePanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23815FE39A5B87070A7690CB /* GamePanels.swift */; };
+		56DEB7B0A547083BA232FD8C /* GameLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = C35AB90BCC65F4CEF67D2AC5 /* GameLibrary.swift */; };
+		621971823A54B77467B2ACCE /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD92EA1D2AD6CB0187E8E15C /* OnboardingView.swift */; };
+		9ECC56C74BB3AAF87EF89275 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4C67414020F63ED2BA86DAD /* SidebarView.swift */; };
+		A9E56F1F574C2F6B4E11AA88 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EDE672E25B8A2578B9888FF /* RootView.swift */; };
+		B76FD56C35B005836A3CE63E /* ArtworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0742F3C8D4415B822F666539 /* ArtworkService.swift */; };
+		B790160B7DAAC2FA787342DD /* StashApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18DBCC4E2EF53EB5BDC7A134 /* StashApp.swift */; };
+		C1AE4F579E0EF7D5D2F13850 /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03AA279E9FAB2449971B4AC8 /* Game.swift */; };
+		CEDF86366A51D66AEE41FBFD /* RuntimeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8C79443550BD3552737774 /* RuntimeManager.swift */; };
+		DAABCECA7F68D9A8CC79B12C /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F091F853C4981235ECADAF3 /* Theme.swift */; };
+		DABA39FE937266FAC9AB132B /* Support.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA0F43F29DBFC1696853915 /* Support.swift */; };
+		DE9E5B3C88BC833349D24A15 /* ConsoleEngines.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDE953D9C31D87F9FFE6A5E /* ConsoleEngines.swift */; };
+		FF436F5052A87D99037D944C /* WhiskyKit in Frameworks */ = {isa = PBXBuildFile; productRef = 80DF3E7D7EA7DE253D9EA347 /* WhiskyKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		03AA279E9FAB2449971B4AC8 /* Game.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
+		0742F3C8D4415B822F666539 /* ArtworkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkService.swift; sourceTree = "<group>"; };
+		18DBCC4E2EF53EB5BDC7A134 /* StashApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StashApp.swift; sourceTree = "<group>"; };
+		1BB1D48AD6FFA707247E21F6 /* WhiskyKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WhiskyKit; path = WhiskyKit; sourceTree = SOURCE_ROOT; };
+		23815FE39A5B87070A7690CB /* GamePanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamePanels.swift; sourceTree = "<group>"; };
+		4CDE953D9C31D87F9FFE6A5E /* ConsoleEngines.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleEngines.swift; sourceTree = "<group>"; };
+		5F091F853C4981235ECADAF3 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		7EDE672E25B8A2578B9888FF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		814402B58E414F6E9163E3E3 /* ModInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModInstaller.swift; sourceTree = "<group>"; };
+		C35AB90BCC65F4CEF67D2AC5 /* GameLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameLibrary.swift; sourceTree = "<group>"; };
+		C4C67414020F63ED2BA86DAD /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		C99D2D2A6F9740ED53280D36 /* Catalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Catalog.swift; sourceTree = "<group>"; };
+		CEA0F43F29DBFC1696853915 /* Support.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Support.swift; sourceTree = "<group>"; };
+		D2AE61AC5EA1512CE4C7A4BC /* AddGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddGameView.swift; sourceTree = "<group>"; };
+		D8F8B73046F58ABB5377C370 /* ArtworkPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkPicker.swift; sourceTree = "<group>"; };
+		F3BFE30BEA627EB8AB7EB8BE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		FB0FE92F4B2DA1E7CC7DF3AD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		FB8C79443550BD3552737774 /* RuntimeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeManager.swift; sourceTree = "<group>"; };
+		FC302346BF5FC5A9225C3868 /* GameDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDetailView.swift; sourceTree = "<group>"; };
+		FD92EA1D2AD6CB0187E8E15C /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		FE48DBAB68E9E944D7AA11A7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FF2AED5E66FAB2122C8437E2 /* Stash.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stash.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		97EADDFE94C633D455420B29 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FF436F5052A87D99037D944C /* WhiskyKit in Frameworks */,
+				365C683A0E55DD701874AB7E /* SemanticVersion in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		22E5CCC3596340D277183E6B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FF2AED5E66FAB2122C8437E2 /* Stash.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3882CD9E441306002BF13144 = {
+			isa = PBXGroup;
+			children = (
+				D3636DAEFA73AAEB340B5027 /* Packages */,
+				C4C0CBBA2BDF41FDCA7DE4C5 /* Stash */,
+				22E5CCC3596340D277183E6B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		609DEB17A5D3D8C832F2269E /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				0742F3C8D4415B822F666539 /* ArtworkService.swift */,
+				C99D2D2A6F9740ED53280D36 /* Catalog.swift */,
+				4CDE953D9C31D87F9FFE6A5E /* ConsoleEngines.swift */,
+				03AA279E9FAB2449971B4AC8 /* Game.swift */,
+				C35AB90BCC65F4CEF67D2AC5 /* GameLibrary.swift */,
+				814402B58E414F6E9163E3E3 /* ModInstaller.swift */,
+				FB8C79443550BD3552737774 /* RuntimeManager.swift */,
+				CEA0F43F29DBFC1696853915 /* Support.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		C4C0CBBA2BDF41FDCA7DE4C5 /* Stash */ = {
+			isa = PBXGroup;
+			children = (
+				FE48DBAB68E9E944D7AA11A7 /* Assets.xcassets */,
+				FB0FE92F4B2DA1E7CC7DF3AD /* Info.plist */,
+				18DBCC4E2EF53EB5BDC7A134 /* StashApp.swift */,
+				609DEB17A5D3D8C832F2269E /* Model */,
+				D7A00AFBA6C712255B27AAB1 /* Views */,
+			);
+			path = Stash;
+			sourceTree = "<group>";
+		};
+		D3636DAEFA73AAEB340B5027 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				1BB1D48AD6FFA707247E21F6 /* WhiskyKit */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		D7A00AFBA6C712255B27AAB1 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				D2AE61AC5EA1512CE4C7A4BC /* AddGameView.swift */,
+				D8F8B73046F58ABB5377C370 /* ArtworkPicker.swift */,
+				FC302346BF5FC5A9225C3868 /* GameDetailView.swift */,
+				23815FE39A5B87070A7690CB /* GamePanels.swift */,
+				FD92EA1D2AD6CB0187E8E15C /* OnboardingView.swift */,
+				7EDE672E25B8A2578B9888FF /* RootView.swift */,
+				F3BFE30BEA627EB8AB7EB8BE /* SettingsView.swift */,
+				C4C67414020F63ED2BA86DAD /* SidebarView.swift */,
+				5F091F853C4981235ECADAF3 /* Theme.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		9FAC94805FFDB4939741D3EE /* Stash */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 78E94BD0C76520D4ECE354DA /* Build configuration list for PBXNativeTarget "Stash" */;
+			buildPhases = (
+				6C13513CC4C46FC36B1B1B62 /* Sources */,
+				AE68EC794A69DDBAA88CF2AF /* Resources */,
+				97EADDFE94C633D455420B29 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Stash;
+			packageProductDependencies = (
+				80DF3E7D7EA7DE253D9EA347 /* WhiskyKit */,
+				2BE5A0C8E711E2D65D9DF956 /* SemanticVersion */,
+			);
+			productName = Stash;
+			productReference = FF2AED5E66FAB2122C8437E2 /* Stash.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		033F29620E5209F5D0401DB9 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					9FAC94805FFDB4939741D3EE = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 8036E9899E16BB9F128645CD /* Build configuration list for PBXProject "Stash" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 3882CD9E441306002BF13144;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				BB5E142DCBECA9F8ED4A6991 /* XCRemoteSwiftPackageReference "SemanticVersion" */,
+				07A48EEE90B9CB284DF0E7EB /* XCLocalSwiftPackageReference "WhiskyKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 22E5CCC3596340D277183E6B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				9FAC94805FFDB4939741D3EE /* Stash */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AE68EC794A69DDBAA88CF2AF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ABC5F74D2C361C0431B2911 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6C13513CC4C46FC36B1B1B62 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				19C440A4D690582764F7057E /* AddGameView.swift in Sources */,
+				1459C82357CEFF47ED1159FF /* ArtworkPicker.swift in Sources */,
+				B76FD56C35B005836A3CE63E /* ArtworkService.swift in Sources */,
+				13450032A98171E81DB0B700 /* Catalog.swift in Sources */,
+				DE9E5B3C88BC833349D24A15 /* ConsoleEngines.swift in Sources */,
+				C1AE4F579E0EF7D5D2F13850 /* Game.swift in Sources */,
+				42AFECE002C2E6E4B1DB767C /* GameDetailView.swift in Sources */,
+				56DEB7B0A547083BA232FD8C /* GameLibrary.swift in Sources */,
+				51366B1C87E7F68D7B885CBC /* GamePanels.swift in Sources */,
+				1DA9EF8ADF9613E7EA5027BB /* ModInstaller.swift in Sources */,
+				621971823A54B77467B2ACCE /* OnboardingView.swift in Sources */,
+				A9E56F1F574C2F6B4E11AA88 /* RootView.swift in Sources */,
+				CEDF86366A51D66AEE41FBFD /* RuntimeManager.swift in Sources */,
+				280D27CD05B87EAD345A0C7D /* SettingsView.swift in Sources */,
+				9ECC56C74BB3AAF87EF89275 /* SidebarView.swift in Sources */,
+				B790160B7DAAC2FA787342DD /* StashApp.swift in Sources */,
+				DABA39FE937266FAC9AB132B /* Support.swift in Sources */,
+				DAABCECA7F68D9A8CC79B12C /* Theme.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		10D2E8ECD05F572617234BDD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				INFOPLIST_FILE = Stash/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.stash.Stash;
+				PRODUCT_NAME = Stash;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		A7232640369F3B29CC31B666 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				INFOPLIST_FILE = Stash/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.stash.Stash;
+				PRODUCT_NAME = Stash;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		A8E1652CCA19D907F3FA6073 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.0.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		F5B4F721C8EDFDD0EA888EF8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.0.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		78E94BD0C76520D4ECE354DA /* Build configuration list for PBXNativeTarget "Stash" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				10D2E8ECD05F572617234BDD /* Debug */,
+				A7232640369F3B29CC31B666 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8036E9899E16BB9F128645CD /* Build configuration list for PBXProject "Stash" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A8E1652CCA19D907F3FA6073 /* Debug */,
+				F5B4F721C8EDFDD0EA888EF8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		07A48EEE90B9CB284DF0E7EB /* XCLocalSwiftPackageReference "WhiskyKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = WhiskyKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		BB5E142DCBECA9F8ED4A6991 /* XCRemoteSwiftPackageReference "SemanticVersion" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SwiftPackageIndex/SemanticVersion.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.3.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2BE5A0C8E711E2D65D9DF956 /* SemanticVersion */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB5E142DCBECA9F8ED4A6991 /* XCRemoteSwiftPackageReference "SemanticVersion" */;
+			productName = SemanticVersion;
+		};
+		80DF3E7D7EA7DE253D9EA347 /* WhiskyKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WhiskyKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 033F29620E5209F5D0401DB9 /* Project object */;
+}
