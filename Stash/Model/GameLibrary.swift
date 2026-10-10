@@ -288,10 +288,15 @@ final class GameLibrary: ObservableObject {
         }
         preparing[game.id] = "Getting \(game.name) ready…"
         try await ClassicEngine.prepare(prefix: game.environmentURL)
-        if let api = game.legacyAPI, game.installedMods[ModPackage.scaling(for: api).id] == nil {
+        if let api = game.legacyAPI {
             let scaling = ModPackage.scaling(for: api)
-            try await ModInstaller.install(scaling, into: game)
-            update(game.id) { $0.installedMods[scaling.id] = Date() }
+            if game.installedMods[scaling.id] == nil {
+                try await ModInstaller.install(scaling, into: game)
+                update(game.id) { $0.installedMods[scaling.id] = Date() }
+            } else {
+                // Games set up by an older Stash get settings added since
+                try ModInstaller.applySettings(of: scaling, to: game)
+            }
         }
         preparing[game.id] = nil
 

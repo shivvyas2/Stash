@@ -133,7 +133,7 @@ Stash reads a game's executable when it's added. A 32-bit game that imports `ddr
 
 1. Downloads the classic engine once (CrossOver 24.0.7, built by the Sikarugir project, about 260 MB).
 2. Upgrades the game's Windows environment to that engine.
-3. Installs [dxwrapper](https://github.com/elishacloud/dxwrapper) next to the game, set to run it in a window that is stretched to fill the display. DirectX 7 and 8 are converted to DirectX 9 on the way.
+3. Installs [dxwrapper](https://github.com/elishacloud/dxwrapper) next to the game, set to run it in a window that is stretched to fill the display. DirectX 7 and 8 are converted to DirectX 9 on the way. It also caps the game at 60 FPS with VSync, which these games were made for: uncapped they run near 120 FPS with uneven frame times, which shows as stutter. Textures get 16× anisotropic filtering.
 
 Two problems made this necessary. Games from this era switch the screen to resolutions like 640×480, which Mac displays don't offer, and crash when the switch fails. And the Wine 7.7 base of the Game Porting Toolkit build crashes some 32-bit games when they start audio. D3DMetal only covers DirectX 11 and 12, so these games lose nothing on the classic engine.
 

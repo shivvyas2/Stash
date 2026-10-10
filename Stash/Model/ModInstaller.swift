@@ -69,11 +69,15 @@ enum ModInstaller {
             try fileManager.copyItem(at: source, to: target)
         }
 
+        try applySettings(of: mod, to: game)
+        try JSONEncoder().encode(manifest).write(to: backup.appending(path: "manifest.json"))
+    }
+
+    static func applySettings(of mod: ModPackage, to game: Game) throws {
         for setting in mod.settings {
-            try IniFile.upsert(file: gameFolder.appending(path: setting.file),
+            try IniFile.upsert(file: game.gameFolderURL.appending(path: setting.file),
                                section: setting.section, key: setting.key, value: setting.value)
         }
-        try JSONEncoder().encode(manifest).write(to: backup.appending(path: "manifest.json"))
     }
 
     static func uninstall(_ mod: ModPackage, from game: Game) throws {

@@ -104,7 +104,13 @@ struct ModPackage: Identifiable {
             ModSetting(file: ini, section: "d3d9", key: "EnableWindowMode", value: "1"),
             ModSetting(file: ini, section: "FullScreen", key: "FullScreen", value: "1"),
             ModSetting(file: ini, section: "FullScreen", key: "ForceWindowResize", value: "1"),
-            ModSetting(file: ini, section: "FullScreen", key: "WaitForWindowChanges", value: "1")
+            ModSetting(file: ini, section: "FullScreen", key: "WaitForWindowChanges", value: "1"),
+            // These games were made for 60 FPS. Uncapped they run near 120 with uneven frame times, which
+            // shows as stutter; a 60 FPS cap with VSync gives every frame the same time on a 120 Hz display.
+            ModSetting(file: ini, section: "d3d9", key: "EnableVSync", value: "1"),
+            ModSetting(file: ini, section: "d3d9", key: "LimitPerFrameFPS", value: "60"),
+            // Sharper textures at an angle, like the pitch. Anti-aliasing is left off: it corrupts some 2D art.
+            ModSetting(file: ini, section: "d3d9", key: "AnisotropicFiltering", value: "16")
         ]
         switch api {
         case .ddraw:
