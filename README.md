@@ -137,6 +137,12 @@ Stash reads a game's executable when it's added. A 32-bit game that imports `ddr
 
 Two problems made this necessary. Games from this era switch the screen to resolutions like 640×480, which Mac displays don't offer, and crash when the switch fails. And the Wine 7.7 base of the Game Porting Toolkit build crashes some 32-bit games when they start audio. D3DMetal only covers DirectX 11 and 12, so these games lose nothing on the classic engine.
 
+Classic games play sound through one device: your Mac's default speaker, or the built-in one when the default is a virtual device like VB-Cable or BlackHole. Games from this era test every sound device when they start, and the engine's 32-bit audio crashes on some of them, microphones in particular. Stash loads a small library into the game (`StashAudio/AudioFilter.c`) that hides the rest. A different speaker can be chosen under **Settings → Sound**, where devices that may not work are marked.
+
+Startup on this engine still fails now and then, so Stash tries a classic game up to three times before reporting a problem.
+
+If a game doesn't start, Stash says why (missing Windows files, a sound device problem or a crash) and points to the full log.
+
 The engine can be changed per game under **Graphics**. A game that has run on the classic engine can't switch back, because its environment has been upgraded.
 
 ### Launching a console game

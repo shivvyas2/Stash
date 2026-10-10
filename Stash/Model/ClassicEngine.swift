@@ -107,45 +107,93 @@ enum ClassicEngine {
         environment["WINEMSYNC"] = "1"
         environment["WINEESYNC"] = "1"
         environment["WINEDLLOVERRIDES"] = overrides.joined(separator: ";")
+        // Wine's graphics and audio modules dlopen MoltenVK and friends by bare name
+        environment["DYLD_FALLBACK_LIBRARY_PATH"] = [folder.path, bundle.appending(path: "lib").path, "/usr/lib"]
+            .joined(separator: ":")
         if fpsOverlay { environment["MTL_HUD_ENABLED"] = "1" }
         return environment
     }
 
-    /// Upgrades a prefix created by the modern engine. Runs once per game.
+    /// A 32-bit system library only this engine ships. Older Stash builds could mark a prefix
+    /// as upgraded while wineboot was stuck behind an invisible Mono prompt, leaving it out.
+    private static func upgradeComplete(_ prefix: URL) -> Bool {
+        FileManager.default.fileExists(atPath: prefix.appending(path: "drive_c/windows/syswow64/coml2.dll").path)
+    }
+
+    /// Upgrades a prefix created by the modern engine. Runs once per game, and again if a past upgrade was cut short.
     static func prepare(prefix: URL) async throws {
-        guard !FileManager.default.fileExists(atPath: marker(in: prefix).path) else { return }
-        let environment = environment(prefix: prefix, overrides: [GameLibrary.quietOverrides])
+        if FileManager.default.fileExists(atPath: marker(in: prefix).path), upgradeComplete(prefix) { return }
+        // mscoree/mshtml off: otherwise wineboot waits on Mono and Gecko install prompts nobody sees
+        let environment = environment(prefix: prefix,
+                                      overrides: [GameLibrary.quietOverrides, "mscoree,mshtml="])
         try await run(wine, ["wineboot", "-u"], environment: environment)
         try await run(wineserver, ["-w"], environment: environment)
+        guard upgradeComplete(prefix) else {
+            throw StashError("Windows couldn't finish setting up for this game. Try playing it again.")
+        }
         try Data().write(to: marker(in: prefix))
     }
 
-    /// Runs a program inside the prefix and returns when it exits. Output goes to the Wine log folder.
-    static func run(_ executable: URL, _ arguments: [String], environment: [String: String]) async throws {
+    /// Runs a program inside the prefix and returns its log when it exits. Output goes to the Wine log folder.
+    /// When `stuckMarker` shows up in the log, the program is hung: the prefix is stopped so this returns.
+    @discardableResult
+    static func run(_ executable: URL, _ arguments: [String], environment: [String: String],
+                    stuckMarker: String? = nil) async throws -> URL {
         let process = Process()
         process.executableURL = executable
         process.arguments = arguments
         process.environment = environment
-        let log = try Wine.makeFileHandle()
+        try FileManager.default.createDirectory(at: Wine.logsFolder, withIntermediateDirectories: true)
+        let logURL = Wine.logsFolder.appending(path: "\(Date.now.ISO8601Format())-\(UUID().uuidString.prefix(4)).log")
+        FileManager.default.createFile(atPath: logURL.path, contents: nil)
+        let log = try FileHandle(forWritingTo: logURL)
         log.write(Data("Engine: classic (CrossOver 24.0.7)\nArguments: \(arguments.joined(separator: " "))\n\n".utf8))
         process.standardOutput = log
         process.standardError = log
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+        defer { try? log.close() }
+
+        let watcher = stuckMarker.flatMap { marker in
+            environment["WINEPREFIX"].map { prefix in
+                Task.detached {
+                    while !Task.isCancelled {
+                        try await Task.sleep(for: .seconds(1))
+                        if let text = try? String(contentsOf: logURL, encoding: .utf8), text.contains(marker) {
+                            stop(prefix: URL(fileURLWithPath: prefix))
+                            return
+                        }
+                    }
+                }
+            }
+        }
+        defer { watcher?.cancel() }
+
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             process.terminationHandler = { _ in continuation.resume() }
             do {
                 try process.run()
             } catch {
                 process.terminationHandler = nil
-                continuation.resume()
+                continuation.resume(throwing: error)
             }
         }
-        try? log.close()
+        return logURL
     }
 
+    /// Wine writes this when the game process couldn't load the Mac graphics driver. The game then hangs.
+    static let noGraphicsDriver = "nodrv_CreateWindow"
+
+    /// Starts a game and returns its log when it exits
+    @discardableResult
     static func launch(_ program: URL, workingFolder: URL, arguments: [String] = [],
-                       environment: [String: String]) async throws {
-        try await run(wine, ["start", "/wait", "/d", workingFolder.windowsPath,
-                             "/unix", program.path(percentEncoded: false)] + arguments, environment: environment)
+                       environment: [String: String]) async throws -> URL {
+        var environment = environment
+        if let filter = StashPaths.audioFilter {
+            environment["DYLD_INSERT_LIBRARIES"] = filter.path
+            environment["STASH_AUDIO_DEVICE"] = AudioDevices.chosenUID
+        }
+        return try await run(wine, ["start", "/wait", "/d", workingFolder.windowsPath,
+                                    "/unix", program.path(percentEncoded: false)] + arguments,
+                             environment: environment, stuckMarker: noGraphicsDriver)
     }
 
     static func stop(prefix: URL) {

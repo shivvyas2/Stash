@@ -19,6 +19,8 @@ enum StashPaths {
     static let covers = data.appending(path: "Covers")
     static let backups = data.appending(path: "Mod Backups")
     static let engines = data.appending(path: "Engines")
+    /// Loaded into Windows games so they see only the Mac's speaker. See StashAudio/AudioFilter.c.
+    static let audioFilter = Bundle.main.url(forResource: "libStashAudio", withExtension: "dylib")
 
     static var defaultInstallLocation: URL {
         FileManager.default.homeDirectoryForCurrentUser.appending(path: "Games")

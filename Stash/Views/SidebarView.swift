@@ -57,7 +57,6 @@ struct SidebarView: View {
                     }
                 }
             }
-            .scrollIndicators(.never)
 
             Spacer(minLength: 0)
             Hairline()

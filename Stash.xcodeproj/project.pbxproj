@@ -19,11 +19,14 @@
 		51366B1C87E7F68D7B885CBC /* GamePanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23815FE39A5B87070A7690CB /* GamePanels.swift */; };
 		56DEB7B0A547083BA232FD8C /* GameLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = C35AB90BCC65F4CEF67D2AC5 /* GameLibrary.swift */; };
 		621971823A54B77467B2ACCE /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD92EA1D2AD6CB0187E8E15C /* OnboardingView.swift */; };
+		7B687031D8E1102CA8FFE4DE /* StashAudio.dylib in Resources */ = {isa = PBXBuildFile; fileRef = B20E8E8AC51BDD16A930CC33 /* StashAudio.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		9ECC56C74BB3AAF87EF89275 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4C67414020F63ED2BA86DAD /* SidebarView.swift */; };
 		A9E56F1F574C2F6B4E11AA88 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EDE672E25B8A2578B9888FF /* RootView.swift */; };
 		B76FD56C35B005836A3CE63E /* ArtworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0742F3C8D4415B822F666539 /* ArtworkService.swift */; };
 		B790160B7DAAC2FA787342DD /* StashApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18DBCC4E2EF53EB5BDC7A134 /* StashApp.swift */; };
+		B7E8FCFF23E755BFBC119BEE /* AudioDevices.swift in Sources */ = {isa = PBXBuildFile; fileRef = F45287CDFD4D4C9713D85D3F /* AudioDevices.swift */; };
 		C1AE4F579E0EF7D5D2F13850 /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03AA279E9FAB2449971B4AC8 /* Game.swift */; };
+		C6BCCAD066AE0ADBA832EF2D /* AudioFilter.c in Sources */ = {isa = PBXBuildFile; fileRef = 33353C9DDF31427453046C99 /* AudioFilter.c */; };
 		CEDF86366A51D66AEE41FBFD /* RuntimeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8C79443550BD3552737774 /* RuntimeManager.swift */; };
 		DAABCECA7F68D9A8CC79B12C /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F091F853C4981235ECADAF3 /* Theme.swift */; };
 		DABA39FE937266FAC9AB132B /* Support.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA0F43F29DBFC1696853915 /* Support.swift */; };
@@ -31,16 +34,28 @@
 		FF436F5052A87D99037D944C /* WhiskyKit in Frameworks */ = {isa = PBXBuildFile; productRef = 80DF3E7D7EA7DE253D9EA347 /* WhiskyKit */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		2B554ACBAFE916136EFD5951 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 033F29620E5209F5D0401DB9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F0E4107AEBFD319CF56EF2B4;
+			remoteInfo = StashAudio;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		03AA279E9FAB2449971B4AC8 /* Game.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
 		0742F3C8D4415B822F666539 /* ArtworkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkService.swift; sourceTree = "<group>"; };
 		18DBCC4E2EF53EB5BDC7A134 /* StashApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StashApp.swift; sourceTree = "<group>"; };
 		1BB1D48AD6FFA707247E21F6 /* WhiskyKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WhiskyKit; path = WhiskyKit; sourceTree = SOURCE_ROOT; };
 		23815FE39A5B87070A7690CB /* GamePanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamePanels.swift; sourceTree = "<group>"; };
+		33353C9DDF31427453046C99 /* AudioFilter.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = AudioFilter.c; sourceTree = "<group>"; };
 		4CDE953D9C31D87F9FFE6A5E /* ConsoleEngines.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleEngines.swift; sourceTree = "<group>"; };
 		5F091F853C4981235ECADAF3 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		7EDE672E25B8A2578B9888FF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		814402B58E414F6E9163E3E3 /* ModInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModInstaller.swift; sourceTree = "<group>"; };
+		B20E8E8AC51BDD16A930CC33 /* StashAudio.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = StashAudio.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		C35AB90BCC65F4CEF67D2AC5 /* GameLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameLibrary.swift; sourceTree = "<group>"; };
 		C4C67414020F63ED2BA86DAD /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		C99D2D2A6F9740ED53280D36 /* Catalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Catalog.swift; sourceTree = "<group>"; };
@@ -48,6 +63,7 @@
 		D2AE61AC5EA1512CE4C7A4BC /* AddGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddGameView.swift; sourceTree = "<group>"; };
 		D8F8B73046F58ABB5377C370 /* ArtworkPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkPicker.swift; sourceTree = "<group>"; };
 		F3BFE30BEA627EB8AB7EB8BE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		F45287CDFD4D4C9713D85D3F /* AudioDevices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioDevices.swift; sourceTree = "<group>"; };
 		FB0FE92F4B2DA1E7CC7DF3AD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		FB8C79443550BD3552737774 /* RuntimeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeManager.swift; sourceTree = "<group>"; };
 		FC302346BF5FC5A9225C3868 /* GameDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDetailView.swift; sourceTree = "<group>"; };
@@ -74,6 +90,7 @@
 			isa = PBXGroup;
 			children = (
 				FF2AED5E66FAB2122C8437E2 /* Stash.app */,
+				B20E8E8AC51BDD16A930CC33 /* StashAudio.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -83,14 +100,24 @@
 			children = (
 				D3636DAEFA73AAEB340B5027 /* Packages */,
 				C4C0CBBA2BDF41FDCA7DE4C5 /* Stash */,
+				58B86A9FF085BB61A3263278 /* StashAudio */,
 				22E5CCC3596340D277183E6B /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		58B86A9FF085BB61A3263278 /* StashAudio */ = {
+			isa = PBXGroup;
+			children = (
+				33353C9DDF31427453046C99 /* AudioFilter.c */,
+			);
+			path = StashAudio;
 			sourceTree = "<group>";
 		};
 		609DEB17A5D3D8C832F2269E /* Model */ = {
 			isa = PBXGroup;
 			children = (
 				0742F3C8D4415B822F666539 /* ArtworkService.swift */,
+				F45287CDFD4D4C9713D85D3F /* AudioDevices.swift */,
 				C99D2D2A6F9740ED53280D36 /* Catalog.swift */,
 				FDB255F637DF8AF08E4DE9B3 /* ClassicEngine.swift */,
 				4CDE953D9C31D87F9FFE6A5E /* ConsoleEngines.swift */,
@@ -153,6 +180,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				2795BBBB23F4261AFD946CA8 /* PBXTargetDependency */,
 			);
 			name = Stash;
 			packageProductDependencies = (
@@ -162,6 +190,23 @@
 			productName = Stash;
 			productReference = FF2AED5E66FAB2122C8437E2 /* Stash.app */;
 			productType = "com.apple.product-type.application";
+		};
+		F0E4107AEBFD319CF56EF2B4 /* StashAudio */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FA982610993EEF7DADD95ABB /* Build configuration list for PBXNativeTarget "StashAudio" */;
+			buildPhases = (
+				6824264E7F42B3185B195C2F /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = StashAudio;
+			packageProductDependencies = (
+			);
+			productName = StashAudio;
+			productReference = B20E8E8AC51BDD16A930CC33 /* StashAudio.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
 		};
 /* End PBXNativeTarget section */
 
@@ -173,6 +218,9 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					9FAC94805FFDB4939741D3EE = {
+						ProvisioningStyle = Automatic;
+					};
+					F0E4107AEBFD319CF56EF2B4 = {
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -196,6 +244,7 @@
 			projectRoot = "";
 			targets = (
 				9FAC94805FFDB4939741D3EE /* Stash */,
+				F0E4107AEBFD319CF56EF2B4 /* StashAudio */,
 			);
 		};
 /* End PBXProject section */
@@ -206,12 +255,21 @@
 			buildActionMask = 2147483647;
 			files = (
 				4ABC5F74D2C361C0431B2911 /* Assets.xcassets in Resources */,
+				7B687031D8E1102CA8FFE4DE /* StashAudio.dylib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		6824264E7F42B3185B195C2F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C6BCCAD066AE0ADBA832EF2D /* AudioFilter.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6C13513CC4C46FC36B1B1B62 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -219,6 +277,7 @@
 				19C440A4D690582764F7057E /* AddGameView.swift in Sources */,
 				1459C82357CEFF47ED1159FF /* ArtworkPicker.swift in Sources */,
 				B76FD56C35B005836A3CE63E /* ArtworkService.swift in Sources */,
+				B7E8FCFF23E755BFBC119BEE /* AudioDevices.swift in Sources */,
 				13450032A98171E81DB0B700 /* Catalog.swift in Sources */,
 				262F8F407382D9C3453A128F /* ClassicEngine.swift in Sources */,
 				DE9E5B3C88BC833349D24A15 /* ConsoleEngines.swift in Sources */,
@@ -240,6 +299,14 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		2795BBBB23F4261AFD946CA8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F0E4107AEBFD319CF56EF2B4 /* StashAudio */;
+			targetProxy = 2B554ACBAFE916136EFD5951 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
 		10D2E8ECD05F572617234BDD /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -258,6 +325,27 @@
 				PRODUCT_BUNDLE_IDENTIFIER = app.stash.Stash;
 				PRODUCT_NAME = Stash;
 				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		391890874CD5F9D0278D986E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = x86_64;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				EXECUTABLE_PREFIX = lib;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-framework CoreAudio";
+				PRODUCT_BUNDLE_IDENTIFIER = app.stash.StashAudio;
+				PRODUCT_NAME = StashAudio;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
 			};
 			name = Debug;
 		};
@@ -315,7 +403,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -334,7 +422,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.0.3;
+				MARKETING_VERSION = 0.0.4;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -345,6 +433,27 @@
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
+		};
+		C63A602324A6B1059B1050AD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = x86_64;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				EXECUTABLE_PREFIX = lib;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-framework CoreAudio";
+				PRODUCT_BUNDLE_IDENTIFIER = app.stash.StashAudio;
+				PRODUCT_NAME = StashAudio;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
 		};
 		F5B4F721C8EDFDD0EA888EF8 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -380,7 +489,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -393,7 +502,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.0.3;
+				MARKETING_VERSION = 0.0.4;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -421,6 +530,15 @@
 			buildConfigurations = (
 				A8E1652CCA19D907F3FA6073 /* Debug */,
 				F5B4F721C8EDFDD0EA888EF8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FA982610993EEF7DADD95ABB /* Build configuration list for PBXNativeTarget "StashAudio" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				391890874CD5F9D0278D986E /* Debug */,
+				C63A602324A6B1059B1050AD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

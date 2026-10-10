@@ -23,6 +23,8 @@ final class GameLibrary: ObservableObject {
 
     let engines = EngineManager()
     private var bottles: [Game.ID: Bottle] = [:]
+    /// Decoded covers. Views ask on every redraw, so reading the PNG each time made scrolling stutter.
+    private var covers: [Game.ID: NSImage?] = [:]
 
     init() {
         load()
@@ -219,6 +221,7 @@ final class GameLibrary: ObservableObject {
 
         let fileManager = FileManager.default
         try? fileManager.removeItem(at: StashPaths.cover(for: game.id))
+        covers[game.id] = nil
         try? fileManager.removeItem(at: StashPaths.backups.appending(path: game.id.uuidString))
         for engine in ["pcsx2", "ppsspp"] {
             try? fileManager.removeItem(at: StashPaths.engines.appending(path: "\(engine)-\(game.id.uuidString).ini"))
@@ -296,11 +299,32 @@ final class GameLibrary: ObservableObject {
         var overrides = [Self.quietOverrides]
         overrides += current.dllOverrides.map { "\($0)=n,b" }
         let arguments = current.arguments.split { $0.isWhitespace }.map(String.init)
-        try await ClassicEngine.launch(
-            current.executableURL, workingFolder: current.gameFolderURL, arguments: arguments,
-            environment: ClassicEngine.environment(prefix: current.environmentURL, overrides: overrides,
-                                                   fpsOverlay: current.fpsOverlay)
-        )
+        let environment = ClassicEngine.environment(prefix: current.environmentURL, overrides: overrides,
+                                                    fpsOverlay: current.fpsOverlay)
+
+        // Startup on this engine fails now and then (sound or graphics driver), so try a few times quietly
+        let attempts = 3
+        for attempt in 1...attempts {
+            let started = Date()
+            let log = try await ClassicEngine.launch(
+                current.executableURL, workingFolder: current.gameFolderURL, arguments: arguments,
+                environment: environment
+            )
+            guard Date().timeIntervalSince(started) < 60,
+                  let text = try? String(contentsOf: log, encoding: .utf8),
+                  let reason = Self.startupFailureReason(in: text) else { return }
+            let worthRetrying = !text.contains("err:module:loader_init")
+            if attempt == attempts || !worthRetrying {
+                lastError = "\(game.name) \(reason)\n\nDetails: \(log.path(percentEncoded: false))"
+                return
+            }
+            let status = "Starting \(game.name) again…"
+            preparing[game.id] = status
+            Task {
+                try? await Task.sleep(for: .seconds(8))
+                if preparing[game.id] == status { preparing[game.id] = nil }
+            }
+        }
     }
 
     /// Switching a game to the modern engine is not offered: an upgraded prefix can't go back to Wine 7.7
@@ -321,8 +345,10 @@ final class GameLibrary: ObservableObject {
             }
             running.remove(id)
             let duration = Date().timeIntervalSince(start)
-            if !game.platform.isConsole, duration < 60, let log = Self.crashLog(since: start) {
-                lastError = "\(game.name) crashed while starting. The details are in \(log.path(percentEncoded: false))."
+            // Classic games check their own logs, since they may have been started more than once
+            if !game.platform.isConsole, game.engine != .classic, duration < 60,
+               let failure = Self.startupFailure(since: start) {
+                lastError = "\(game.name) \(failure.reason)\n\nDetails: \(failure.log.path(percentEncoded: false))"
             }
             update(id) { game in
                 game.lastPlayed = start
@@ -331,19 +357,38 @@ final class GameLibrary: ObservableObject {
         }
     }
 
-    /// The newest Wine log written since `date`, if it records a crash
-    nonisolated static func crashLog(since date: Date) -> URL? {
+    /// The Wine log written since `date` that records why a game didn't start, with a plain explanation
+    nonisolated static func startupFailure(since date: Date) -> (log: URL, reason: String)? {
         let logs = (try? FileManager.default.contentsOfDirectory(
             at: Wine.logsFolder, includingPropertiesForKeys: [.contentModificationDateKey]
         )) ?? []
         let recent = logs.filter {
             ((try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast) >= date
         }
-        let markers = ["Unhandled page fault", "Unhandled exception", "Assertion failed"]
-        return recent.first { log in
-            guard let text = try? String(contentsOf: log, encoding: .utf8) else { return false }
-            return markers.contains(where: text.contains)
+        for log in recent {
+            guard let text = try? String(contentsOf: log, encoding: .utf8),
+                  let reason = startupFailureReason(in: text) else { continue }
+            return (log, reason)
         }
+        return nil
+    }
+
+    nonisolated static func startupFailureReason(in log: String) -> String? {
+        if log.contains("mmdevapi") && log.contains("_wassert") {
+            return "closed while opening your Mac's sound devices. Virtual audio devices such as VB-Cable, "
+                + "BlackHole or Loopback can cause this. Remove or disable them in Audio MIDI Setup, then try again."
+        }
+        if log.contains(ClassicEngine.noGraphicsDriver) {
+            return "couldn't open its window."
+        }
+        if log.contains("err:module:loader_init") {
+            return "couldn't start because Windows files it needs are missing."
+        }
+        let crashes = ["Unhandled page fault", "Unhandled exception", "Assertion failed", "_wassert"]
+        if crashes.contains(where: log.contains) {
+            return "crashed while starting."
+        }
+        return nil
     }
 
     func stopAll() {
@@ -436,7 +481,10 @@ final class GameLibrary: ObservableObject {
     // MARK: - Covers
 
     func cover(for id: Game.ID) -> NSImage? {
-        NSImage(contentsOf: StashPaths.cover(for: id))
+        if let cached = covers[id] { return cached }
+        let image = NSImage(contentsOf: StashPaths.cover(for: id))
+        covers[id] = image
+        return image
     }
 
     func setCover(_ image: NSImage?, for id: Game.ID) {
@@ -444,6 +492,7 @@ final class GameLibrary: ObservableObject {
               let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) else { return }
         try? FileManager.default.createDirectory(at: StashPaths.covers, withIntermediateDirectories: true)
         try? png.write(to: StashPaths.cover(for: id))
+        covers[id] = nil
         objectWillChange.send()
     }
 
