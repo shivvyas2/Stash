@@ -28,6 +28,8 @@ targets:
       path: Stash/Info.plist
       properties:
         CFBundleDisplayName: Stash
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSApplicationCategoryType: public.app-category.games
         LSMinimumSystemVersion: "14.0"
         NSHumanReadableCopyright: "GPL-3.0. Built on Whisky, Wine and Apple's Game Porting Toolkit."
