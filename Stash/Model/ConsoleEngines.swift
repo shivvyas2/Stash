@@ -2,7 +2,7 @@
 //  ConsoleEngines.swift
 //  Stash
 //
-//  Console games run on open-source engines (DuckStation, PCSX2, PPSSPP,
+//  Console games run on open-source engines (DuckStation, PCSX2, RPCS3, PPSSPP,
 //  Dolphin) that Stash downloads, configures and drives itself. Games boot
 //  straight into fullscreen with the engine's own interface hidden, and quitting
 //  the game returns to Stash.
@@ -12,7 +12,7 @@ import AppKit
 import Foundation
 
 enum ConsoleEngine: String, CaseIterable, Identifiable {
-    case duckstation, pcsx2, ppsspp, dolphin
+    case duckstation, pcsx2, rpcs3, ppsspp, dolphin
 
     var id: String { rawValue }
 
@@ -21,6 +21,7 @@ enum ConsoleEngine: String, CaseIterable, Identifiable {
         case .windows: return nil
         case .ps1: return .duckstation
         case .ps2: return .pcsx2
+        case .ps3: return .rpcs3
         case .psp: return .ppsspp
         case .gamecube, .wii: return .dolphin
         }
@@ -31,6 +32,7 @@ enum ConsoleEngine: String, CaseIterable, Identifiable {
         switch self {
         case .duckstation: return "PlayStation engine"
         case .pcsx2: return "PlayStation 2 engine"
+        case .rpcs3: return "PlayStation 3 engine"
         case .ppsspp: return "PSP engine"
         case .dolphin: return "GameCube & Wii engine"
         }
@@ -40,6 +42,7 @@ enum ConsoleEngine: String, CaseIterable, Identifiable {
         switch self {
         case .duckstation: return "DuckStation"
         case .pcsx2: return "PCSX2"
+        case .rpcs3: return "RPCS3"
         case .ppsspp: return "PPSSPP"
         case .dolphin: return "Dolphin"
         }
@@ -47,10 +50,23 @@ enum ConsoleEngine: String, CaseIterable, Identifiable {
 
     var needsBIOS: Bool { self == .duckstation || self == .pcsx2 }
 
-    var supportsWidescreen: Bool { self != .ppsspp }
+    /// PS3 games are already widescreen
+    var supportsWidescreen: Bool { self != .ppsspp && self != .rpcs3 }
+
+    /// The PS3 engine needs Sony's system software, which Stash downloads from Sony itself
+    var needsFirmware: Bool { self == .rpcs3 }
 
     var app: URL { StashPaths.engines.appending(path: "\(rawValue).app") }
-    var dataFolder: URL { StashPaths.engines.appending(path: "\(credit) Data") }
+
+    var dataFolder: URL {
+        switch self {
+        // RPCS3 always keeps its data in its standard Application Support folder
+        case .rpcs3:
+            return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+                .appending(path: "rpcs3")
+        default: return StashPaths.engines.appending(path: "\(credit) Data")
+        }
+    }
 
     var biosFolder: URL {
         switch self {
@@ -63,6 +79,11 @@ enum ConsoleEngine: String, CaseIterable, Identifiable {
     }
 
     var isInstalled: Bool { FileManager.default.fileExists(atPath: app.path) }
+
+    var hasFirmware: Bool {
+        guard needsFirmware else { return true }
+        return FileManager.default.fileExists(atPath: dataFolder.appending(path: "dev_flash/vsh/module/vsh.self").path)
+    }
 
     var hasBIOS: Bool {
         guard needsBIOS else { return true }
@@ -85,6 +106,11 @@ enum ConsoleEngine: String, CaseIterable, Identifiable {
             return URL(string: "https://github.com/stenzek/duckstation/releases/download/latest/duckstation-mac-release.zip")!
         case .pcsx2:
             return try await Self.latestGitHubAsset(repo: "PCSX2/pcsx2", matching: "macos-Qt.tar.xz")
+        case .rpcs3:
+            // Stash itself runs as Intel for Wine, so ask the Mac rather than checking how Stash was built
+            return Mac.isAppleSilicon
+                ? try await Self.latestGitHubAsset(repo: "RPCS3/rpcs3-binaries-mac-arm64", matching: "_macos_aarch64.7z")
+                : try await Self.latestGitHubAsset(repo: "RPCS3/rpcs3-binaries-mac", matching: "_macos.7z")
         case .ppsspp:
             return try await Self.latestGitHubAsset(repo: "hrydgard/ppsspp", matching: "PPSSPPSDL-macOS")
         case .dolphin:
@@ -138,6 +164,21 @@ enum ConsoleEngine: String, CaseIterable, Identifiable {
             return ["-batch", "-nogui", "-fullscreen", "-datapath", dataFolder.path,
                     "-gamecfg", perGame.path, "--", path]
 
+        case .rpcs3:
+            // Only the settings listed here change; the rest come from RPCS3's own defaults
+            let config = StashPaths.engines.appending(path: "rpcs3-\(game.id.uuidString).yml")
+            try FileManager.default.createDirectory(at: StashPaths.engines, withIntermediateDirectories: true)
+            try """
+                Video:
+                  Resolution Scale: \(scale * 100)
+                Miscellaneous:
+                  Start games in fullscreen mode: true
+                  Prevent display sleep while running games: true
+                  Show shader compilation hint: false
+
+                """.write(to: config, atomically: true, encoding: .utf8)
+            return ["--no-gui", "--fullscreen", "--config", config.path, path]
+
         case .ppsspp:
             let config = StashPaths.engines.appending(path: "ppsspp-\(game.id.uuidString).ini")
             try? FileManager.default.removeItem(at: config)
@@ -161,11 +202,17 @@ final class EngineManager: ObservableObject {
     @Published private(set) var installing: Set<ConsoleEngine> = []
     private var processes: [Game.ID: Process] = [:]
 
+    /// Downloads the engine, and for the PS3 engine Sony's system software too
     func install(_ engine: ConsoleEngine) async throws {
-        guard !engine.isInstalled else { return }
+        guard !engine.isInstalled || !engine.hasFirmware else { return }
         installing.insert(engine)
         defer { installing.remove(engine) }
 
+        if !engine.isInstalled { try await download(engine) }
+        if !engine.hasFirmware { try await installPS3Firmware() }
+    }
+
+    private func download(_ engine: ConsoleEngine) async throws {
         let url = try await engine.downloadURL()
         let (download, _) = try await URLSession.shared.download(from: url)
         try await Task.detached {
@@ -201,6 +248,53 @@ final class EngineManager: ObservableObject {
         }.value
     }
 
+    /// Fetches the PS3 system software from Sony's own update server and has RPCS3 install it.
+    /// RPCS3 stays open once it's done, so Stash watches its log and closes it.
+    private func installPS3Firmware() async throws {
+        let list = URL(string: "http://fus01.ps3.update.playstation.net/update/ps3/list/us/ps3-updatelist.txt")!
+        let (data, _) = try await URLSession.shared.data(from: list)
+        let firmware = String(decoding: data, as: UTF8.self)
+            .split(whereSeparator: { $0.isNewline || $0 == ";" })
+            .compactMap { $0.hasPrefix("CDN=") ? URL(string: String($0.dropFirst(4))) : nil }
+            .first { $0.lastPathComponent == "PS3UPDAT.PUP" }
+        guard let firmware else { throw StashError("Sony's PS3 update server didn't answer. Try again in a moment.") }
+
+        let (download, _) = try await URLSession.shared.download(from: firmware)
+        let pup = FileManager.default.temporaryDirectory.appending(path: "PS3UPDAT-\(UUID().uuidString).PUP")
+        try FileManager.default.moveItem(at: download, to: pup)
+        defer { try? FileManager.default.removeItem(at: pup) }
+        guard let executable = ConsoleEngine.rpcs3.executable else {
+            throw StashError("The PlayStation 3 engine is damaged. Reinstall it in Settings.")
+        }
+
+        let log = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+            .appending(path: "rpcs3/RPCS3.log")
+        // A log left from an earlier run could already say the install worked
+        try? FileManager.default.removeItem(at: log)
+        let process = Process()
+        process.executableURL = executable
+        process.arguments = ["--installfw", pup.path]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        try process.run()
+        defer { if process.isRunning { process.terminate() } }
+
+        let deadline = Date().addingTimeInterval(5 * 60)
+        while process.isRunning, Date() < deadline {
+            try await Task.sleep(for: .seconds(1))
+            let text = String(decoding: (try? Data(contentsOf: log)) ?? Data(), as: UTF8.self)
+            if text.contains("Successfully installed PS3 firmware") { break }
+            if let line = text.split(separator: "\n").first(where: { $0.contains("Error while installing firmware") }) {
+                let reason = line.components(separatedBy: "Error while installing firmware: ").last ?? ""
+                throw StashError("The PS3 system software didn't install. \(reason)")
+            }
+        }
+        guard ConsoleEngine.rpcs3.hasFirmware else {
+            throw StashError("The PS3 system software didn't finish installing. Try again from Settings → Consoles.")
+        }
+        objectWillChange.send()
+    }
+
     func remove(_ engine: ConsoleEngine) {
         try? FileManager.default.removeItem(at: engine.app)
         objectWillChange.send()
@@ -218,7 +312,7 @@ final class EngineManager: ObservableObject {
     /// Runs a console game and returns when the player quits
     func run(_ game: Game) async throws {
         guard let engine = ConsoleEngine.for(game.platform) else { return }
-        if !engine.isInstalled { try await install(engine) }
+        try await install(engine)
         guard engine.hasBIOS else {
             throw StashError("\(game.platform.title) games need a BIOS file from your console. Add it in Settings → Consoles.")
         }
@@ -266,6 +360,7 @@ extension Platform {
 
     /// Best guess of a console game file's platform from its extension and disc header
     static func detect(_ file: URL) -> Platform? {
+        if ps3GameRoot(for: file) != nil { return .ps3 }
         switch file.pathExtension.lowercased() {
         case "cue", "pbp", "m3u": return .ps1
         case "cso": return .psp
@@ -289,6 +384,12 @@ extension Platform {
         if word(base + 0x1C) == 0xC2339F3D { return .gamecube }
         if ext == "rvz" || ext == "wia" || ext == "ciso" { return .gamecube }
 
+        // PS3 discs start their second sector with "PlayStation3", and name their volume PS3VOLUME
+        try? handle.seek(toOffset: 0x800)
+        if String(data: (try? handle.read(upToCount: 12)) ?? Data(), encoding: .ascii) == "PlayStation3" { return .ps3 }
+        try? handle.seek(toOffset: 0x8028)
+        if String(data: (try? handle.read(upToCount: 9)) ?? Data(), encoding: .ascii) == "PS3VOLUME" { return .ps3 }
+
         // ISO 9660 primary volume descriptor: system identifier at 0x8008
         try? handle.seek(toOffset: 0x8008)
         let system = String(data: (try? handle.read(upToCount: 16)) ?? Data(), encoding: .ascii) ?? ""
@@ -297,5 +398,53 @@ extension Platform {
         if system.hasPrefix("PLAYSTATION") { return size > 800_000_000 ? .ps2 : .ps1 }
         if ext == "chd" { return .ps2 }
         return size > 800_000_000 ? .ps2 : .ps1
+    }
+
+    // MARK: PS3
+
+    /// The top folder of a PS3 game, given that folder or the EBOOT.BIN inside it.
+    /// Disc dumps hold PS3_GAME/USRDIR/EBOOT.BIN; downloaded games hold USRDIR/EBOOT.BIN.
+    static func ps3GameRoot(for url: URL) -> URL? {
+        let fileManager = FileManager.default
+        var folder = url
+        var isFolder: ObjCBool = false
+        guard fileManager.fileExists(atPath: url.path, isDirectory: &isFolder) else { return nil }
+        if !isFolder.boolValue {
+            guard url.lastPathComponent.uppercased() == "EBOOT.BIN" else { return nil }
+            folder = url.deletingLastPathComponent().deletingLastPathComponent()
+            if folder.lastPathComponent.uppercased() == "PS3_GAME" { folder = folder.deletingLastPathComponent() }
+        }
+        for game in [folder.appending(path: "PS3_GAME"), folder]
+        where fileManager.fileExists(atPath: game.appending(path: "USRDIR/EBOOT.BIN").path)
+            && fileManager.fileExists(atPath: game.appending(path: "PARAM.SFO").path) {
+            return folder
+        }
+        return nil
+    }
+
+    /// The game's name as it appears on the PS3's own menu, read from PARAM.SFO
+    static func ps3Title(at root: URL) -> String? {
+        let candidates = [root.appending(path: "PS3_GAME/PARAM.SFO"), root.appending(path: "PARAM.SFO")]
+        guard let data = candidates.lazy.compactMap({ try? Data(contentsOf: $0) }).first,
+              data.count >= 20, data.prefix(4) == Data([0, 0x50, 0x53, 0x46]) else { return nil }
+        func int(_ offset: Int, _ size: Int) -> Int {
+            guard offset + size <= data.count else { return 0 }
+            return data[offset..<offset + size].reversed().reduce(0) { $0 << 8 | Int($1) }
+        }
+        let keys = int(8, 4), values = int(12, 4)
+        for entry in 0..<int(16, 4) {
+            let base = 20 + entry * 16
+            let keyStart = keys + int(base, 2)
+            guard let keyEnd = data[keyStart...].firstIndex(of: 0),
+                  String(decoding: data[keyStart..<keyEnd], as: UTF8.self) == "TITLE" else { continue }
+            let start = values + int(base + 12, 4)
+            let end = min(start + int(base + 4, 4), data.count)
+            guard start < end else { return nil }
+            let title = String(decoding: data[start..<end], as: UTF8.self)
+                .trimmingCharacters(in: .controlCharacters.union(.whitespacesAndNewlines))
+                .replacingOccurrences(of: "\n", with: " ")
+            return title.isEmpty ? nil : title
+        }
+        return nil
     }
 }

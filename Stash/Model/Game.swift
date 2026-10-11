@@ -33,7 +33,7 @@ enum GraphicsMode: String, Codable, CaseIterable, Identifiable {
 }
 
 enum Platform: String, Codable, CaseIterable, Identifiable {
-    case windows, ps1, ps2, psp, gamecube, wii
+    case windows, ps1, ps2, ps3, psp, gamecube, wii
 
     var id: String { rawValue }
 
@@ -42,6 +42,7 @@ enum Platform: String, Codable, CaseIterable, Identifiable {
         case .windows: return "Windows"
         case .ps1: return "PlayStation"
         case .ps2: return "PlayStation 2"
+        case .ps3: return "PlayStation 3"
         case .psp: return "PSP"
         case .gamecube: return "GameCube"
         case .wii: return "Wii"
@@ -51,7 +52,7 @@ enum Platform: String, Codable, CaseIterable, Identifiable {
     var symbol: String {
         switch self {
         case .windows: return "pc"
-        case .ps1, .ps2: return "playstation.logo"
+        case .ps1, .ps2, .ps3: return "playstation.logo"
         case .psp: return "gamecontroller"
         case .gamecube, .wii: return "gamecontroller.fill"
         }
@@ -161,9 +162,11 @@ struct Game: Codable, Identifiable, Hashable {
     /// An empty custom year hides the catalog year
     var year: String? { customYear.map { $0.isEmpty ? nil : $0 } ?? knownGame?.year }
 
-    static let upscaleOptions: [(scale: Int, title: String, detail: String)] = [
-        (1, "1×", "Original"), (2, "2×", "HD"), (3, "3×", "Full HD"), (4, "4×", "QHD"), (6, "6×", "4K")
-    ]
+    static func upscaleOptions(for platform: Platform) -> [(scale: Int, title: String, detail: String)] {
+        // PS3 games already draw in HD, so each step is a much bigger jump
+        if platform == .ps3 { return [(1, "1×", "Original"), (2, "2×", "1440p"), (3, "3×", "4K")] }
+        return [(1, "1×", "Original"), (2, "2×", "HD"), (3, "3×", "Full HD"), (4, "4×", "QHD"), (6, "6×", "4K")]
+    }
 
     var totalPlaytime: TimeInterval { sessions.reduce(0) { $0 + $1.duration } }
 

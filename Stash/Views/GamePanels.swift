@@ -167,7 +167,7 @@ struct GraphicsPanel: View {
         VStack(alignment: .leading, spacing: 0) {
             if game.platform.isConsole, let engine = ConsoleEngine.for(game.platform) {
                 SectionHeading(title: "Resolution", detail: "How sharp the game is drawn. Higher needs more GPU.")
-                OptionStrip(options: Game.upscaleOptions.map { ($0.scale, $0.title, $0.detail) },
+                OptionStrip(options: Game.upscaleOptions(for: game.platform).map { ($0.scale, $0.title, $0.detail) },
                             selection: game.upscale) { value in library.update(game.id) { $0.upscale = value } }
                     .padding(.bottom, 28)
                 if engine.supportsWidescreen {

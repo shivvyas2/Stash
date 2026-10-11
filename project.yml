@@ -42,6 +42,12 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: app.stash.Stash
             CFBundleURLSchemes: [stash]
+        # The PS3 system software is only served over plain HTTP, straight from Sony
+        NSAppTransportSecurity:
+          NSExceptionDomains:
+            update.playstation.net:
+              NSIncludesSubdomains: true
+              NSExceptionAllowsInsecureHTTPLoads: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.stash.Stash

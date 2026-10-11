@@ -185,6 +185,8 @@ final class GameLibrary: ObservableObject {
         var game = Game(name: name, platform: platform, environmentPath: home.path(percentEncoded: false),
                         executablePath: gameFile.path(percentEncoded: false))
         game.retina = true
+        // PS3 games already draw in HD, so their original resolution is the safe start
+        if platform == .ps3 { game.upscale = 1 }
         games.append(game)
         save()
         selection = game.id

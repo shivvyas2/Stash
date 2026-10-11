@@ -37,6 +37,15 @@ enum StashPaths {
     }
 }
 
+enum Mac {
+    /// True on M-series Macs, even while Stash itself runs as Intel under Rosetta
+    static let isAppleSilicon: Bool = {
+        var value: Int32 = 0
+        var size = MemoryLayout<Int32>.size
+        return sysctlbyname("hw.optional.arm64", &value, &size, nil, 0) == 0 && value == 1
+    }()
+}
+
 enum Shell {
     @discardableResult
     static func run(_ executable: String, _ arguments: [String]) throws -> String {

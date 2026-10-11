@@ -32,7 +32,7 @@ struct AddGameView: View {
             case .installer: return "A setup.exe or .msi from a website, store or download"
             case .disc: return "An .iso, .cue or .dmg copied from a game disc"
             case .folder: return "A game that's already installed, e.g. copied from a Windows PC"
-            case .console: return "A PlayStation, PS2, PSP, GameCube or Wii game you own"
+            case .console: return "A PlayStation, PS2, PS3, PSP, GameCube or Wii game you own"
             case .steam: return "Install Steam, sign in, and your Steam games appear in your library"
             }
         }
@@ -195,7 +195,8 @@ struct AddGameView: View {
             panel.message = "Choose the folder that contains the game"
         case .console:
             panel.allowedContentTypes = Platform.consoleFileExtensions.compactMap { UTType(filenameExtension: $0) }
-            panel.message = "Choose the game file (.iso, .chd, .cue, .rvz, .cso, .wbfs…)"
+            panel.canChooseDirectories = true
+            panel.message = "Choose the game file (.iso, .chd, .cue, .rvz, .cso, .wbfs…) or a PS3 game folder"
         case .steam:
             return
         }
@@ -203,9 +204,14 @@ struct AddGameView: View {
     }
 
     private func accept(_ url: URL, as option: Source? = nil) {
+        // PS3 games are folders, or the EBOOT.BIN inside one
+        let ps3Game = Platform.ps3GameRoot(for: url)
+        let url = ps3Game ?? url
         let ext = url.pathExtension.lowercased()
-        let detected = url.hasDirectoryPath ? nil : Platform.detect(url)
-        if let option {
+        let detected = ps3Game != nil ? .ps3 : url.hasDirectoryPath ? nil : Platform.detect(url)
+        if ps3Game != nil {
+            source = .console
+        } else if let option {
             source = option
         } else if url.hasDirectoryPath {
             source = .folder
@@ -223,6 +229,7 @@ struct AddGameView: View {
     }
 
     static func guessName(from url: URL, source: Source) -> String {
+        if let title = Platform.ps3Title(at: url) { return title }
         var base = url.deletingPathExtension().lastPathComponent
         if source == .installer, ["setup", "install", "installer"].contains(base.lowercased()) {
             base = url.deletingLastPathComponent().lastPathComponent

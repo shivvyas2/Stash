@@ -73,9 +73,13 @@ struct SettingsView: View {
                                     .foregroundStyle(engine.hasBIOS ? Theme.positive : Theme.muted)
                                 Button("Add BIOS…") { addBIOS(for: engine) }
                             }
+                            if engine.needsFirmware, engine.isInstalled, !engines.installing.contains(engine) {
+                                Text(engine.hasFirmware ? "System software ✓" : "No system software")
+                                    .foregroundStyle(engine.hasFirmware ? Theme.positive : Theme.muted)
+                            }
                             if engines.installing.contains(engine) {
                                 ProgressView().controlSize(.small)
-                            } else if engine.isInstalled {
+                            } else if engine.isInstalled, engine.hasFirmware {
                                 Button("Remove") { engines.remove(engine) }
                             } else {
                                 Button("Install") { Task { try? await engines.install(engine) } }
@@ -92,7 +96,7 @@ struct SettingsView: View {
             Section {
                 Text("Stash is built on Whisky, Wine and Apple's Game Porting Toolkit (GPL-3.0). "
                      + "Enhancements are community mods by ThirteenAG, CookiePLMonster (Silent) and aap. "
-                     + "Console games run on DuckStation, PCSX2, PPSSPP and Dolphin. Only play games you own.")
+                     + "Console games run on DuckStation, PCSX2, RPCS3, PPSSPP and Dolphin. Only play games you own.")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
