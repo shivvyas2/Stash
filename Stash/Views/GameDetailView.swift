@@ -132,8 +132,8 @@ struct GameDetailView: View {
                                 library.setAppIcon(GameLibrary.icon(for: current.executableURL), for: game.id)
                             }
                         }
-                        if library.hasCustomIcon(game.id) {
-                            Button("Make App Icon from Cover") { library.setAppIcon(nil, for: game.id) }
+                        if !library.usesCoverAsIcon(game.id) {
+                            Button("Use Cover as App Icon") { library.setAppIcon(nil, for: game.id) }
                         }
                         if current.engine == .classic {
                             Divider()

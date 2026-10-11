@@ -50,28 +50,23 @@ struct ArtworkPicker: View {
             }
             .padding(.bottom, 14)
 
-            if kind == .icon && !officialIcons.isEmpty {
-                Text("From the game's files").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.muted)
+            if kind == .icon {
+                Text("Use the cover, or the game's own icon").font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Theme.muted)
                     .padding(.bottom, 8)
                 ScrollView(.horizontal) {
                     HStack(spacing: 12) {
+                        quickPick(name: "Cover", image: library.cover(for: game.id),
+                                  current: library.usesCoverAsIcon(game.id),
+                                  help: "Make the app icon from the cover") {
+                            library.setAppIcon(nil, for: game.id)
+                        }
                         ForEach(officialIcons.indices, id: \.self) { index in
                             let icon = officialIcons[index]
-                            Button {
+                            quickPick(name: icon.name, image: icon.image, current: false,
+                                      help: "\(icon.name).exe · \(GameLibrary.pixelWidth(of: icon.image)) px") {
                                 library.setAppIcon(icon.image, for: game.id)
-                                dismiss()
-                            } label: {
-                                VStack(spacing: 4) {
-                                    Image(nsImage: icon.image).resizable().interpolation(.high)
-                                        .aspectRatio(contentMode: .fit).frame(width: 56, height: 56)
-                                    Text(icon.name).font(.system(size: 11)).foregroundStyle(Theme.ink)
-                                        .lineLimit(1).frame(width: 76)
-                                }
-                                .padding(6)
-                                .card(radius: 8)
                             }
-                            .buttonStyle(.plain)
-                            .help("\(icon.name).exe · \(Int(icon.image.size.width)) px")
                         }
                     }
                 }
@@ -146,6 +141,31 @@ struct ArtworkPicker: View {
             }
             await search()
         }
+    }
+
+    private func quickPick(name: String, image: NSImage?, current: Bool, help: String,
+                           action: @escaping () -> Void) -> some View {
+        Button {
+            action()
+            dismiss()
+        } label: {
+            VStack(spacing: 4) {
+                Group {
+                    if let image {
+                        Image(nsImage: image).resizable().interpolation(.high).aspectRatio(contentMode: .fit)
+                    } else {
+                        Image(systemName: "photo").foregroundStyle(Theme.muted)
+                    }
+                }
+                .frame(width: 56, height: 56)
+                Text(current ? "\(name) ✓" : name).font(.system(size: 11, weight: current ? .semibold : .regular))
+                    .foregroundStyle(Theme.ink).lineLimit(1).frame(width: 76)
+            }
+            .padding(6)
+            .card(radius: 8)
+        }
+        .buttonStyle(.plain)
+        .help(help)
     }
 
     private func search() async {

@@ -135,6 +135,13 @@ enum ArtworkService {
         return cleaned.isEmpty ? name : cleaned
     }
 
+    /// Best-guess app icon for a game name: top search hit, top-rated icon that isn't tiny
+    static func bestIcon(for name: String) async throws -> NSImage? {
+        guard let match = try await search(searchTitle(for: name)).first,
+              let icon = try await icons(for: match.id).first(where: { $0.width >= 128 }) else { return nil }
+        return try await image(at: icon.url)
+    }
+
     /// Best-guess cover for a game name: top search hit, top-rated cover
     static func bestCover(for name: String) async throws -> NSImage? {
         guard let match = try await search(searchTitle(for: name)).first,

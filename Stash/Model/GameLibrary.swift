@@ -20,6 +20,7 @@ final class GameLibrary: ObservableObject {
     @Published private(set) var preparing: [Game.ID: String] = [:]
     /// Games whose cover art is being fetched
     @Published private(set) var fetchingArtwork: Set<Game.ID> = []
+    private var findingIcons: Set<Game.ID> = []
     /// Running games that moved the main screen to the one they play on
     private var movedDisplay: Set<Game.ID> = []
 
@@ -34,6 +35,7 @@ final class GameLibrary: ObservableObject {
         if let steam = steamClient { importSteamGames(from: steam.environmentURL) }
         // Apps exported before their cover arrived, or by older Stash builds, get a proper icon
         for game in games { refreshMacAppIcons(for: game.id, onlyMissing: true) }
+        games.map(\.id).forEach(findAppIcon)
     }
 
     subscript(id: Game.ID) -> Game? { games.first { $0.id == id } }
@@ -605,35 +607,74 @@ final class GameLibrary: ObservableObject {
         try? png.write(to: StashPaths.cover(for: id))
         covers[id] = nil
         objectWillChange.send()
-        // Covers often land after the Mac app was made, so its icon follows the cover, unless one was picked
-        if !hasCustomIcon(id) { refreshMacAppIcons(for: id) }
+        // Covers often land after the Mac app was made, so its icon follows the cover when that's the source
+        if usesCoverAsIcon(id) { refreshMacAppIcons(for: id) }
     }
 
     // MARK: - App icons
 
-    /// An app icon picked for the game, kept apart from its cover
-    func customIcon(for id: Game.ID) -> NSImage? {
+    /// The game's own app icon image, found or picked, kept apart from its cover
+    func iconImage(for id: Game.ID) -> NSImage? {
         NSImage(contentsOf: StashPaths.icon(for: id))
     }
 
-    func hasCustomIcon(_ id: Game.ID) -> Bool {
+    func hasIconImage(_ id: Game.ID) -> Bool {
         FileManager.default.fileExists(atPath: StashPaths.icon(for: id).path)
     }
 
-    /// Sets the game's app icon, or with nil goes back to the one made from the cover.
+    func usesCoverAsIcon(_ id: Game.ID) -> Bool {
+        self[id]?.appIconSource == .cover || !hasIconImage(id)
+    }
+
+    /// Sets the game's app icon, or with nil uses its cover instead.
     /// Mac apps already made for the game pick it up straight away.
-    func setAppIcon(_ image: NSImage?, for id: Game.ID) {
+    func setAppIcon(_ image: NSImage?, for id: Game.ID, source: AppIconSource = .picked) {
         let url = StashPaths.icon(for: id)
         if let image {
             guard let tiff = image.tiffRepresentation,
                   let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) else { return }
             try? FileManager.default.createDirectory(at: StashPaths.icons, withIntermediateDirectories: true)
             try? png.write(to: url)
+            update(id) { $0.appIconSource = source }
         } else {
             try? FileManager.default.removeItem(at: url)
+            update(id) { $0.appIconSource = .cover }
         }
-        objectWillChange.send()
         refreshMacAppIcons(for: id)
+    }
+
+    /// Looks once for the game's real icon: SteamGridDB first, then its own exe.
+    /// Anything smaller than 128 px looks worse than the cover, so the cover stays then.
+    func findAppIcon(for id: Game.ID) {
+        guard let game = self[id], game.appIconSource == .automatic, !hasIconImage(id),
+              !findingIcons.contains(id) else { return }
+        findingIcons.insert(id)
+        Task {
+            defer { findingIcons.remove(id) }
+            var found: NSImage?
+            if ArtworkService.isConfigured {
+                do {
+                    found = try await ArtworkService.bestIcon(for: game.knownGame?.title ?? game.name)
+                } catch {
+                    // Offline or SteamGridDB down: try again next time rather than settle on the cover
+                    return
+                }
+            }
+            if found == nil {
+                found = await Task.detached { Self.officialIcons(for: game).first?.image }.value
+                    .flatMap { Self.pixelWidth(of: $0) >= 128 ? $0 : nil }
+            }
+            guard self[id]?.appIconSource == .automatic else { return }
+            if let found {
+                setAppIcon(found, for: id, source: .automatic)
+            } else {
+                update(id) { $0.appIconSource = .cover }
+            }
+        }
+    }
+
+    nonisolated static func pixelWidth(of image: NSImage) -> Int {
+        image.representations.map(\.pixelsWide).max() ?? Int(image.size.width)
     }
 
     func hasArtwork(_ id: Game.ID) -> Bool {
@@ -642,6 +683,7 @@ final class GameLibrary: ObservableObject {
 
     /// Downloads a cover from SteamGridDB when a key is set. Quietly does nothing otherwise.
     func fetchArtwork(for id: Game.ID, replacing: Bool = false) {
+        findAppIcon(for: id)
         // Check the cover first so a game that has art never touches the Keychain
         guard let game = self[id], !fetchingArtwork.contains(id), replacing || !hasArtwork(id),
               ArtworkService.isConfigured else { return }
@@ -724,8 +766,8 @@ final class GameLibrary: ObservableObject {
     /// Gives the game's Mac app its picked icon, else one made from its cover, else the exe's own icon
     func writeIcon(for game: Game, into app: URL) throws {
         let rendered: CGImage?
-        if let picked = customIcon(for: game.id) {
-            rendered = AppIcon.render(icon: picked)
+        if game.appIconSource != .cover, let icon = iconImage(for: game.id) {
+            rendered = AppIcon.render(icon: icon)
         } else if let artwork = cover(for: game.id) ?? Self.icon(for: game.executableURL) {
             rendered = AppIcon.render(from: artwork)
         } else {

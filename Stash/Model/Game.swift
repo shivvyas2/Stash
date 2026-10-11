@@ -66,6 +66,11 @@ struct PlaySession: Codable, Hashable {
     var duration: TimeInterval
 }
 
+/// Automatic looks for the game's real icon once and falls back to the cover when none is good enough
+enum AppIconSource: String, Codable {
+    case automatic, cover, picked
+}
+
 struct Game: Codable, Identifiable, Hashable {
     var id = UUID()
     var name: String
@@ -103,6 +108,8 @@ struct Game: Codable, Identifiable, Hashable {
     var sessions: [PlaySession] = []
     /// Mod id → install date
     var installedMods: [String: Date] = [:]
+    /// Where the game's Mac app icon comes from
+    var appIconSource: AppIconSource = .automatic
 
     init(name: String, platform: Platform = .windows, environmentPath: String, executablePath: String,
          knownGameID: String? = nil) {
@@ -149,6 +156,8 @@ struct Game: Codable, Identifiable, Hashable {
         lastPlayed = value(.lastPlayed, Date?.none)
         sessions = value(.sessions, [PlaySession]())
         installedMods = value(.installedMods, [String: Date]())
+        // Libraries from before app icons were separate start automatic, so their games get a lookup
+        appIconSource = value(.appIconSource, AppIconSource.automatic)
     }
 
     var environmentURL: URL { URL(fileURLWithPath: environmentPath) }
