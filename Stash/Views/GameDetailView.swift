@@ -17,6 +17,7 @@ struct GameDetailView: View {
     @State private var uninstallSize: String?
     @State private var showArtwork = false
     @State private var editingDetails = false
+    @State private var displays = Displays.all()
     /// Set to show the sound picker; true means play once a speaker is picked
     @State private var soundPicker: Bool?
 
@@ -52,6 +53,9 @@ struct GameDetailView: View {
         }
         .sheet(isPresented: $showArtwork) { ArtworkPicker(game: current) }
         .sheet(isPresented: $editingDetails) { EditDetailsView(game: current) }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)) { _ in
+            displays = Displays.all()
+        }
         .sheet(isPresented: Binding(get: { soundPicker != nil }, set: { if !$0 { soundPicker = nil } })) {
             SoundPicker(game: current, playAfter: soundPicker ?? false)
         }
@@ -101,10 +105,12 @@ struct GameDetailView: View {
                             .buttonStyle(PrimaryButtonStyle())
                             .keyboardShortcut(.return, modifiers: [.command])
                     }
+                    if displays.count > 1 { displayMenu }
                     Button("Show in Finder") {
                         NSWorkspace.shared.activateFileViewerSelecting([current.executableURL])
                     }
                     .buttonStyle(SecondaryButtonStyle())
+                    .fixedSize()
                     Menu {
                         Button("Edit Details…") { editingDetails = true }
                         Divider()
@@ -130,6 +136,31 @@ struct GameDetailView: View {
                 }
             }
         }
+    }
+
+    /// Which screen the game plays on, when there's more than one
+    private var displayMenu: some View {
+        let chosen = displays.first { $0.key == current.display }
+        return Menu {
+            Picker("Play on", selection: Binding(
+                get: { chosen?.key },
+                set: { key in library.update(game.id) { $0.display = key } }
+            )) {
+                Text("Screen with the menu bar").tag(String?.none)
+                Divider()
+                ForEach(displays) { Text($0.name).tag(String?.some($0.key)) }
+            }
+            .pickerStyle(.inline)
+        } label: {
+            Label(chosen?.name ?? NSScreen.screens.first?.localizedName ?? "Display", systemImage: "display")
+                .font(.system(size: 13, weight: .medium))
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .padding(.horizontal, 12)
+        .frame(height: 32)
+        .card(radius: 8)
+        .help("Choose the screen \(current.name) plays on")
     }
 
     /// Classic games ask which speaker to use the first time

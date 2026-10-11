@@ -20,6 +20,8 @@ final class GameLibrary: ObservableObject {
     @Published private(set) var preparing: [Game.ID: String] = [:]
     /// Games whose cover art is being fetched
     @Published private(set) var fetchingArtwork: Set<Game.ID> = []
+    /// Running games that moved the main screen to the one they play on
+    private var movedDisplay: Set<Game.ID> = []
 
     let engines = EngineManager()
     private var bottles: [Game.ID: Bottle] = [:]
@@ -427,12 +429,18 @@ final class GameLibrary: ObservableObject {
         running.insert(id)
         let start = Date()
         Task {
+            if let display = Displays.display(for: game.display), Displays.makeMain(display) {
+                movedDisplay.insert(id)
+                // Give apps a moment to see the new arrangement before the game asks for its screen
+                try? await Task.sleep(for: .milliseconds(600))
+            }
             do {
                 try await session()
             } catch {
                 lastError = "\(game.name) failed to start: \(error.localizedDescription)"
             }
             running.remove(id)
+            if movedDisplay.remove(id) != nil, movedDisplay.isEmpty { Displays.restore() }
             let duration = Date().timeIntervalSince(start)
             // Classic games check their own logs, since they may have been started more than once
             if !game.platform.isConsole, game.engine == .modern, duration < 60,

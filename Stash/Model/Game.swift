@@ -91,6 +91,8 @@ struct Game: Codable, Identifiable, Hashable {
     /// Classic games: UID of the speaker picked at first launch. Empty means automatic, nil means not asked yet.
     var audioDevice: String?
     var windowsVersion: WinVersion = .win10
+    /// Screen the game plays on (GameDisplay.key). Nil means whichever screen has the menu bar.
+    var display: String?
     /// Consoles: internal render resolution multiplier (1 = original)
     var upscale: Int = 3
     var widescreen: Bool = true
@@ -139,6 +141,7 @@ struct Game: Codable, Identifiable, Hashable {
         fpsOverlay = value(.fpsOverlay, false)
         audioDevice = value(.audioDevice, String?.none)
         windowsVersion = value(.windowsVersion, WinVersion.win10)
+        display = value(.display, String?.none)
         upscale = value(.upscale, 3)
         widescreen = value(.widescreen, true)
         addedAt = value(.addedAt, Date())
