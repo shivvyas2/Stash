@@ -58,6 +58,7 @@ struct SettingsView: View {
             }
             Section("Game engine") {
                 LabeledContent("Version", value: engineVersion)
+                LabeledContent("Runtime package", value: WhiskyWineInstaller.whiskyWineVersion().map { "\($0)" } ?? "Not installed")
                 LabeledContent("Graphics", value: "Apple D3DMetal, WineD3D, DXVK")
                 HStack {
                     Button("Show Logs") { NSWorkspace.shared.open(Wine.logsFolder) }
@@ -127,7 +128,7 @@ struct SettingsView: View {
         }
     }
 
-    /// e.g. "0.0.9 (build 9)"
+    /// e.g. "1.0.0 (build 11)"
     private static var appVersion: String {
         let info = Bundle.main.infoDictionary
         let version = info?["CFBundleShortVersionString"] as? String ?? "Unknown"
