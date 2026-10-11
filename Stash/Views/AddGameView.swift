@@ -63,6 +63,9 @@ struct AddGameView: View {
 
     @State private var status: [String] = []
     @State private var waitingForInstaller = false
+    /// The disc drive a disc image installer runs from, while it runs
+    @State private var discDrive: DiscDrive?
+    @State private var discMessage: String?
     @State private var environment: URL?
     @State private var candidates: [URL] = []
     @State private var chosen: URL?
@@ -340,6 +343,7 @@ struct AddGameView: View {
                 }
                 .padding(14)
                 .card(radius: 10)
+                if let discDrive { discSwapper(discDrive) }
             }
             if let failure {
                 Text(failure).font(.system(size: 13)).foregroundStyle(Theme.warning)
@@ -347,6 +351,39 @@ struct AddGameView: View {
             }
             Spacer()
         }
+    }
+
+    /// Games on several discs ask for the next one partway through installing
+    private func discSwapper(_ drive: DiscDrive) -> some View {
+        HStack(alignment: .center, spacing: 12) {
+            Image(systemName: "opticaldisc").foregroundStyle(Theme.ink)
+            VStack(alignment: .leading, spacing: 3) {
+                Text("In the drive: \(drive.image.deletingPathExtension().lastPathComponent)")
+                    .font(.system(size: 12, weight: .medium))
+                Text(discMessage ?? "If the installer asks for another disc, insert its image here, then press OK in the installer.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button("Insert Next Disc…") {
+                let panel = NSOpenPanel()
+                panel.allowedContentTypes = [.diskImage, UTType(filenameExtension: "iso") ?? .diskImage,
+                                             UTType(filenameExtension: "cue") ?? .data]
+                panel.directoryURL = drive.image.deletingLastPathComponent()
+                panel.message = "Choose the disc the installer is asking for"
+                guard panel.runModal() == .OK, let url = panel.url else { return }
+                do {
+                    try drive.swap(to: url)
+                    discMessage = "Disc changed. Press OK or Retry in the installer."
+                } catch {
+                    discMessage = error.localizedDescription
+                }
+            }
+            .buttonStyle(SecondaryButtonStyle())
+            .fixedSize()
+        }
+        .padding(14)
+        .card(radius: 10)
     }
 
     private func start() {
@@ -372,12 +409,17 @@ struct AddGameView: View {
                     try await library.runInstaller(sourceURL, environment: environment)
                 case .disc:
                     status.append("Opening the disc")
-                    let volume = try mount(sourceURL)
-                    defer { _ = try? Shell.run("/usr/bin/hdiutil", ["detach", volume.path, "-quiet"]) }
-                    let setup = try discInstaller(on: volume)
+                    let drive = try await DiscDrive(image: sourceURL, environment: environment)
+                    discDrive = drive
+                    defer {
+                        drive.eject()
+                        discDrive = nil
+                        discMessage = nil
+                    }
+                    let setup = try discInstaller(on: drive.mountPoint)
                     status.append("Running the installer")
                     waitingForInstaller = true
-                    try await library.runInstaller(setup, environment: environment)
+                    try await library.runInstaller(setup, environment: environment, from: drive)
                 case .folder:
                     if copyFolder {
                         status.append("Copying game files")
@@ -506,15 +548,6 @@ struct AddGameView: View {
                 .keyboardShortcut(.defaultAction)
             }
         }
-    }
-
-    private func mount(_ image: URL) throws -> URL {
-        let output = try Shell.run("/usr/bin/hdiutil", ["attach", "-nobrowse", "-readonly", image.path])
-        guard let line = output.split(separator: "\n").last(where: { $0.contains("/Volumes/") }),
-              let range = line.range(of: "/Volumes/") else {
-            throw StashError("The disc image couldn't be opened.")
-        }
-        return URL(fileURLWithPath: String(line[range.lowerBound...]).trimmingCharacters(in: .whitespaces))
     }
 
     private func discInstaller(on volume: URL) throws -> URL {

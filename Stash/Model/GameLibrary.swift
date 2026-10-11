@@ -90,8 +90,10 @@ final class GameLibrary: ObservableObject {
         return folder
     }
 
-    /// Runs a Windows installer (.exe or .msi) inside an environment and waits for it to exit
-    func runInstaller(_ installer: URL, environment: URL, engine: WineEngine = .modern) async throws {
+    /// Runs a Windows installer (.exe or .msi) inside an environment and waits for it to exit.
+    /// Installers on a disc start from the disc's own drive, where they look for the next disc.
+    func runInstaller(_ installer: URL, environment: URL, engine: WineEngine = .modern,
+                      from disc: DiscDrive? = nil) async throws {
         if engine == .classic {
             try await ClassicEngine.prepare(prefix: environment)
             try await ClassicEngine.launch(installer, workingFolder: installer.deletingLastPathComponent(),
@@ -102,8 +104,10 @@ final class GameLibrary: ObservableObject {
         let bottle = Bottle(bottleUrl: environment, isAvailable: true)
         for await _ in try Wine.runWineProcess(
             name: installer.lastPathComponent,
-            args: ["start", "/wait", "/d", installer.deletingLastPathComponent().windowsPath,
-                   "/unix", installer.path(percentEncoded: false)],
+            args: disc.map { ["start", "/wait", "/d", $0.windowsPath(of: installer.deletingLastPathComponent()),
+                              $0.windowsPath(of: installer)] }
+                ?? ["start", "/wait", "/d", installer.deletingLastPathComponent().windowsPath,
+                    "/unix", installer.path(percentEncoded: false)],
             bottle: bottle,
             environment: ["WINEDLLOVERRIDES": Self.quietOverrides]
         ) { }
