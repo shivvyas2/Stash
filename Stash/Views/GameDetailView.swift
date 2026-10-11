@@ -128,7 +128,7 @@ struct GameDetailView: View {
 
     /// Classic games ask which speaker to use the first time
     private func play() {
-        if current.engine == .classic, current.audioDevice == nil {
+        if current.engine == .classic, current.audioDevice == nil, !current.isSteamClient {
             soundPicker = true
         } else {
             library.play(game.id)

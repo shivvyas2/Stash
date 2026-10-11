@@ -266,10 +266,6 @@ final class GameLibrary: ObservableObject {
             track(id) { try await self.playClassic(game) }
             return
         }
-        if game.engine == .latest {
-            track(id) { try await self.playLatest(game) }
-            return
-        }
 
         let bottle = bottle(for: game)
         bottle.settings.metalHud = game.fpsOverlay
@@ -320,7 +316,10 @@ final class GameLibrary: ObservableObject {
         let arguments = current.arguments.split { $0.isWhitespace }.map(String.init)
         let environment = ClassicEngine.environment(prefix: current.environmentURL, overrides: overrides,
                                                     fpsOverlay: current.fpsOverlay, audioDevice: current.audioDevice)
-        try ClassicEngine.installAudioFilter()
+        try ClassicEngine.installFixes()
+
+        // Games Steam installed while it was open join the library when it closes
+        defer { if current.isSteam { importSteamGames(from: current.environmentURL) } }
 
         // Startup on this engine fails now and then, so try a few times quietly
         let attempts = 3
@@ -333,6 +332,10 @@ final class GameLibrary: ObservableObject {
             guard Date().timeIntervalSince(started) < 60,
                   let text = try? String(contentsOf: log, encoding: .utf8),
                   let reason = Self.startupFailureReason(in: text) else { return }
+            // Steam's browser processes crash and restart on their own; only failures that stop Steam opening count
+            if current.isSteam, !text.contains(ClassicEngine.noGraphicsDriver), !text.contains("err:module:loader_init") {
+                return
+            }
             let worthRetrying = !text.contains("err:module:loader_init")
             if attempt == attempts || !worthRetrying {
                 lastError = "\(game.name) \(reason)\n\nDetails: \(log.path(percentEncoded: false))"
@@ -352,40 +355,16 @@ final class GameLibrary: ObservableObject {
         update(id) { $0.audioDevice = uid }
     }
 
-    private func playLatest(_ game: Game) async throws {
-        if !LatestEngine.isInstalled {
-            preparing[game.id] = "Downloading the latest engine (about 180 MB, first time only)…"
-            defer { preparing[game.id] = nil }
-            try await LatestEngine.install()
-        }
-        var overrides = [Self.quietOverrides]
-        overrides += game.dllOverrides.map { "\($0)=n,b" }
-        let arguments = game.arguments.split { $0.isWhitespace }.map(String.init)
-        let log = try await LatestEngine.launch(
-            game.executableURL, workingFolder: game.gameFolderURL, arguments: arguments,
-            environment: LatestEngine.environment(prefix: game.environmentURL, overrides: overrides,
-                                                  fpsOverlay: game.fpsOverlay)
-        )
-        let isSteam = game.isSteamClient || game.steamAppID != nil
-        if let text = try? String(contentsOf: log, encoding: .utf8), let reason = Self.startupFailureReason(in: text) {
-            // Steam's browser processes crash and restart on their own; only failures that stop Steam opening count
-            if !isSteam || text.contains(ClassicEngine.noGraphicsDriver) || text.contains("err:module:loader_init") {
-                lastError = "\(game.name) \(reason)\n\nDetails: \(log.path(percentEncoded: false))"
-            }
-        }
-        if isSteam { importSteamGames(from: game.environmentURL) }
-    }
-
     // MARK: - Steam
 
     var steamClient: Game? { games.first(where: \.isSteamClient) }
 
-    /// Installs Windows Steam into its own environment on the latest engine and adds it to the library
+    /// Installs Windows Steam into its own environment on the classic engine and adds it to the library
     func addSteam(to location: URL, status: @escaping (String) -> Void) async throws -> Game {
         if let existing = steamClient { return existing }
-        if !LatestEngine.isInstalled {
-            status("Downloading the latest engine (about 180 MB)…")
-            try await LatestEngine.install()
+        if !ClassicEngine.isInstalled {
+            status("Downloading the classic engine (about 260 MB)…")
+            try await ClassicEngine.install()
         }
         var prefix = location.appending(path: "Steam")
         var suffix = 2
@@ -394,23 +373,25 @@ final class GameLibrary: ObservableObject {
             suffix += 1
         }
         status("Preparing Windows…")
-        try await LatestEngine.createPrefix(prefix)
+        try FileManager.default.createDirectory(at: prefix, withIntermediateDirectories: true)
+        try await ClassicEngine.prepare(prefix: prefix)
+        try ClassicEngine.installFixes()
 
         status("Installing Steam…")
         let (download, _) = try await URLSession.shared.download(from: Steam.installerURL)
         let installer = FileManager.default.temporaryDirectory.appending(path: "SteamSetup-\(UUID().uuidString).exe")
         try FileManager.default.moveItem(at: download, to: installer)
         defer { try? FileManager.default.removeItem(at: installer) }
-        let environment = LatestEngine.environment(prefix: prefix)
-        try await LatestEngine.run(LatestEngine.wine, [installer.path, "/S"], environment: environment)
-        try await LatestEngine.run(LatestEngine.wineserver, ["-w"], environment: environment)
+        let environment = ClassicEngine.environment(prefix: prefix, overrides: [Self.quietOverrides])
+        try await ClassicEngine.run(ClassicEngine.wine, [installer.path, "/S"], environment: environment)
+        try await ClassicEngine.run(ClassicEngine.wineserver, ["-w"], environment: environment)
         guard FileManager.default.fileExists(atPath: Steam.client(in: prefix).path) else {
             throw StashError("Steam's installer finished, but Steam wasn't installed.")
         }
 
         var game = Game(name: "Steam", environmentPath: prefix.path(percentEncoded: false),
                         executablePath: Steam.client(in: prefix).path(percentEncoded: false))
-        game.engine = .latest
+        game.engine = .classic
         games.append(game)
         save()
         setCover(Self.icon(for: game.executableURL), for: game.id)
@@ -426,7 +407,7 @@ final class GameLibrary: ObservableObject {
         for installed in added {
             var game = Game(name: installed.name, environmentPath: prefix.path(percentEncoded: false),
                             executablePath: client)
-            game.engine = .latest
+            game.engine = .classic
             game.steamAppID = installed.appID
             game.arguments = "-silent -applaunch \(installed.appID)"
             games.append(game)
@@ -453,7 +434,7 @@ final class GameLibrary: ObservableObject {
             }
             running.remove(id)
             let duration = Date().timeIntervalSince(start)
-            // Classic and latest-engine games check their own logs
+            // Classic games check their own logs, since they may have been started more than once
             if !game.platform.isConsole, game.engine == .modern, duration < 60,
                let failure = Self.startupFailure(since: start) {
                 lastError = "\(game.name) \(failure.reason)\n\nDetails: \(failure.log.path(percentEncoded: false))"
@@ -508,8 +489,6 @@ final class GameLibrary: ObservableObject {
             engines.stop(game)
         } else if game.engine == .classic {
             ClassicEngine.stop(prefix: game.environmentURL)
-        } else if game.engine == .latest {
-            LatestEngine.stop(prefix: game.environmentURL)
         } else {
             try? Wine.killBottle(bottle: bottle(for: game))
         }
@@ -526,13 +505,6 @@ final class GameLibrary: ObservableObject {
             }
             return
         }
-        if game.engine == .latest {
-            Task {
-                try? await LatestEngine.setRegistry(prefix: game.environmentURL, key: #"HKCU\Software\Wine\Mac Driver"#,
-                                                    name: "RetinaMode", value: enabled ? "y" : "n")
-            }
-            return
-        }
         let bottle = bottle(for: game)
         Task { try? await Wine.changeRetinaMode(bottle: bottle, retinaMode: enabled) }
     }
@@ -542,10 +514,6 @@ final class GameLibrary: ObservableObject {
         update(id) { $0.windowsVersion = version }
         if game.engine == .classic {
             Task { try? await ClassicEngine.setWindowsVersion(prefix: game.environmentURL, version) }
-            return
-        }
-        if game.engine == .latest {
-            Task { try? await LatestEngine.setWindowsVersion(prefix: game.environmentURL, version) }
             return
         }
         let bottle = bottle(for: game)

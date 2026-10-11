@@ -13,11 +13,6 @@ import WhiskyKit
 
 enum WineEngine: String, Codable, CaseIterable, Identifiable {
     case modern, classic
-    /// Current upstream Wine, used for Steam. Not offered for other games yet.
-    case latest
-
-    /// Engines a player can switch a game between
-    static let selectable: [WineEngine] = [.modern, .classic]
 
     var id: String { rawValue }
 
@@ -25,7 +20,6 @@ enum WineEngine: String, Codable, CaseIterable, Identifiable {
         switch self {
         case .modern: return "Modern"
         case .classic: return "Classic"
-        case .latest: return "Latest"
         }
     }
 
@@ -33,7 +27,6 @@ enum WineEngine: String, Codable, CaseIterable, Identifiable {
         switch self {
         case .modern: return "Game Porting Toolkit with D3DMetal. Best for games from about 2010 on."
         case .classic: return "CrossOver 24 with full-screen scaling. Best for 32-bit games from the 2000s."
-        case .latest: return "Wine \(LatestEngine.version), kept current. Runs Steam."
         }
     }
 }
@@ -148,7 +141,7 @@ enum ClassicEngine {
     /// When `stuckMarker` shows up in the log, the program is hung: the prefix is stopped so this returns.
     @discardableResult
     static func run(_ executable: URL, _ arguments: [String], environment: [String: String],
-                    stuckMarker: String? = nil, engineName: String = "classic (CrossOver 24.0.7)") async throws -> URL {
+                    stuckMarker: String? = nil) async throws -> URL {
         let process = Process()
         process.executableURL = executable
         process.arguments = arguments
@@ -157,7 +150,7 @@ enum ClassicEngine {
         let logURL = Wine.logsFolder.appending(path: "\(Date.now.ISO8601Format())-\(UUID().uuidString.prefix(4)).log")
         FileManager.default.createFile(atPath: logURL.path, contents: nil)
         let log = try FileHandle(forWritingTo: logURL)
-        log.write(Data("Engine: \(engineName)\nArguments: \(arguments.joined(separator: " "))\n\n".utf8))
+        log.write(Data("Engine: classic (CrossOver 24.0.7)\nArguments: \(arguments.joined(separator: " "))\n\n".utf8))
         process.standardOutput = log
         process.standardError = log
         defer { try? log.close() }
@@ -192,32 +185,40 @@ enum ClassicEngine {
     /// Wine writes this when the game process couldn't load the Mac graphics driver. The game then hangs.
     static let noGraphicsDriver = "nodrv_CreateWindow"
 
-    private static let coreAudioPath = "/System/Library/Frameworks/CoreAudio.framework/Versions/A/CoreAudio"
-    private static let audioFilterPath = "@loader_path/libStashAudio.dylib"
+    /// Fixes Stash applies to the engine's macOS drivers. Done in place so they need no developer tools,
+    /// and repeated after an engine reinstall. Originals are kept next to the patched files.
+    static func installFixes() throws {
+        // The audio driver shows games a single speaker (StashAudio/AudioFilter.c)
+        try patchLibraryReference(in: "winecoreaudio.so",
+                                  from: "/System/Library/Frameworks/CoreAudio.framework/Versions/A/CoreAudio",
+                                  to: StashPaths.audioFilter)
+        // The network driver can list connections on macOS 26 (StashNet/NetworkFix.c)
+        try patchLibraryReference(in: "nsiproxy.so", from: "/usr/lib/libSystem.B.dylib", to: StashPaths.networkFix)
+    }
 
-    /// Points the engine's audio driver at Stash's CoreAudio stand-in (StashAudio/AudioFilter.c), which shows
-    /// games a single speaker. Done in place so it needs no developer tools; repeated after an engine reinstall.
-    static func installAudioFilter() throws {
-        guard let filter = StashPaths.audioFilter else { return }
+    /// Makes `driver` load `replacement` instead of the library at `original`. The replacement re-exports the
+    /// original, so only the functions it defines change. The new path must fit in the old one's space.
+    private static func patchLibraryReference(in driver: String, from original: String, to replacement: URL?) throws {
+        guard let replacement else { return }
         let fileManager = FileManager.default
         let unixFolder = bundle.appending(path: "lib/wine/x86_64-unix")
-        let installed = unixFolder.appending(path: "libStashAudio.dylib")
-        if !fileManager.contentsEqual(atPath: filter.path, andPath: installed.path) {
+        let installed = unixFolder.appending(path: replacement.lastPathComponent)
+        if !fileManager.contentsEqual(atPath: replacement.path, andPath: installed.path) {
             try? fileManager.removeItem(at: installed)
-            try fileManager.copyItem(at: filter, to: installed)
+            try fileManager.copyItem(at: replacement, to: installed)
         }
 
-        let driver = unixFolder.appending(path: "winecoreaudio.so")
-        var data = try Data(contentsOf: driver)
-        let original = Data(coreAudioPath.utf8)
-        guard let range = data.range(of: original) else { return }
-        let backup = unixFolder.appending(path: "winecoreaudio.so.original")
-        if !fileManager.fileExists(atPath: backup.path) { try fileManager.copyItem(at: driver, to: backup) }
+        let driverURL = unixFolder.appending(path: driver)
+        var data = try Data(contentsOf: driverURL)
+        let originalPath = Data(original.utf8)
+        let newPath = Data("@loader_path/\(replacement.lastPathComponent)".utf8)
+        guard let range = data.range(of: originalPath), newPath.count <= originalPath.count else { return }
+        let backup = unixFolder.appending(path: "\(driver).original")
+        if !fileManager.fileExists(atPath: backup.path) { try fileManager.copyItem(at: driverURL, to: backup) }
         // The load command keeps its size: the shorter path is padded with zeros
-        let replacement = Data(audioFilterPath.utf8)
-        data.replaceSubrange(range, with: replacement + Data(count: original.count - replacement.count))
-        try data.write(to: driver)
-        try Shell.run("/usr/bin/codesign", ["--force", "--sign", "-", driver.path])
+        data.replaceSubrange(range, with: newPath + Data(count: originalPath.count - newPath.count))
+        try data.write(to: driverURL)
+        try Shell.run("/usr/bin/codesign", ["--force", "--sign", "-", driverURL.path])
     }
 
     /// Starts a game and returns its log when it exits

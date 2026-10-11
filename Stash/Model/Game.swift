@@ -145,7 +145,9 @@ struct Game: Codable, Identifiable, Hashable {
     var executableURL: URL { URL(fileURLWithPath: executablePath) }
     var gameFolderURL: URL { executableURL.deletingLastPathComponent() }
     /// The Steam client itself, as opposed to a game installed by it
-    var isSteamClient: Bool { engine == .latest && steamAppID == nil && executableURL.lastPathComponent == "steam.exe" }
+    var isSteamClient: Bool { steamAppID == nil && executableURL.lastPathComponent.lowercased() == "steam.exe" }
+    /// Steam, or a game played through it
+    var isSteam: Bool { isSteamClient || steamAppID != nil }
     var knownGame: KnownGame? { knownGameID.flatMap(KnownGame.byID) }
 
     static let upscaleOptions: [(scale: Int, title: String, detail: String)] = [

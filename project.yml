@@ -27,6 +27,9 @@ targets:
       - target: StashAudio
         link: false
         embed: true
+      - target: StashNet
+        link: false
+        embed: true
     info:
       path: Stash/Info.plist
       properties:
@@ -62,6 +65,23 @@ targets:
         ONLY_ACTIVE_ARCH: NO
         LD_DYLIB_INSTALL_NAME: "@loader_path/libStashAudio.dylib"
         OTHER_LDFLAGS: -framework CoreAudio -framework CoreFoundation -Wl,-reexport_framework,CoreAudio
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+        SKIP_INSTALL: YES
+  StashNet:
+    type: library.dynamic
+    platform: macOS
+    sources:
+      - path: StashNet
+    settings:
+      base:
+        # Short name: it replaces the libSystem path in the network driver, which is only 26 characters
+        PRODUCT_NAME: sn
+        EXECUTABLE_PREFIX: lib
+        ARCHS: x86_64
+        ONLY_ACTIVE_ARCH: NO
+        LD_DYLIB_INSTALL_NAME: "@loader_path/libsn.dylib"
+        OTHER_LDFLAGS: -Wl,-reexport-lSystem
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_IDENTITY: "-"
         SKIP_INSTALL: YES

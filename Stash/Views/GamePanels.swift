@@ -178,9 +178,10 @@ struct GraphicsPanel: View {
                                                 set: { value in library.update(game.id) { $0.widescreen = value } }))
                 }
             } else {
-                if game.engine != .latest {
+                // Steam needs the classic engine: its window doesn't show on the modern one
+                if !game.isSteam {
                     SectionHeading(title: "Engine")
-                    OptionStrip(options: WineEngine.selectable.map { ($0, $0.title, $0.detail) },
+                    OptionStrip(options: WineEngine.allCases.map { ($0, $0.title, $0.detail) },
                                 selection: game.engine, select: chooseEngine)
                         .padding(.bottom, 28)
                 }

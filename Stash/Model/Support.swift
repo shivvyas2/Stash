@@ -21,6 +21,8 @@ enum StashPaths {
     static let engines = data.appending(path: "Engines")
     /// The classic engine's stand-in for CoreAudio, which shows games one speaker. See StashAudio/AudioFilter.c.
     static let audioFilter = Bundle.main.url(forResource: "libStashAudio", withExtension: "dylib")
+    /// Lets the classic engine list network connections on macOS 26. See StashNet/NetworkFix.c.
+    static let networkFix = Bundle.main.url(forResource: "libsn", withExtension: "dylib")
 
     static var defaultInstallLocation: URL {
         FileManager.default.homeDirectoryForCurrentUser.appending(path: "Games")
