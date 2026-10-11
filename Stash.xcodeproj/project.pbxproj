@@ -26,6 +26,7 @@
 		89B1ED757D3A13D6C661B34E /* StashNet.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 587E34EFEC268347B9F5874A /* StashNet.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		9ECC56C74BB3AAF87EF89275 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4C67414020F63ED2BA86DAD /* SidebarView.swift */; };
 		A9E56F1F574C2F6B4E11AA88 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EDE672E25B8A2578B9888FF /* RootView.swift */; };
+		B6B04B052BEDBF810F5BD7FD /* EditDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D0D9B56ED44E3E6827DC33 /* EditDetailsView.swift */; };
 		B76FD56C35B005836A3CE63E /* ArtworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0742F3C8D4415B822F666539 /* ArtworkService.swift */; };
 		B790160B7DAAC2FA787342DD /* StashApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18DBCC4E2EF53EB5BDC7A134 /* StashApp.swift */; };
 		B7E8FCFF23E755BFBC119BEE /* AudioDevices.swift in Sources */ = {isa = PBXBuildFile; fileRef = F45287CDFD4D4C9713D85D3F /* AudioDevices.swift */; };
@@ -59,6 +60,7 @@
 /* Begin PBXFileReference section */
 		03AA279E9FAB2449971B4AC8 /* Game.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
 		0742F3C8D4415B822F666539 /* ArtworkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkService.swift; sourceTree = "<group>"; };
+		11D0D9B56ED44E3E6827DC33 /* EditDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditDetailsView.swift; sourceTree = "<group>"; };
 		18DBCC4E2EF53EB5BDC7A134 /* StashApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StashApp.swift; sourceTree = "<group>"; };
 		1BB1D48AD6FFA707247E21F6 /* WhiskyKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WhiskyKit; path = WhiskyKit; sourceTree = SOURCE_ROOT; };
 		23815FE39A5B87070A7690CB /* GamePanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamePanels.swift; sourceTree = "<group>"; };
@@ -192,6 +194,7 @@
 			children = (
 				D2AE61AC5EA1512CE4C7A4BC /* AddGameView.swift */,
 				D8F8B73046F58ABB5377C370 /* ArtworkPicker.swift */,
+				11D0D9B56ED44E3E6827DC33 /* EditDetailsView.swift */,
 				FC302346BF5FC5A9225C3868 /* GameDetailView.swift */,
 				23815FE39A5B87070A7690CB /* GamePanels.swift */,
 				FD92EA1D2AD6CB0187E8E15C /* OnboardingView.swift */,
@@ -343,6 +346,7 @@
 				13450032A98171E81DB0B700 /* Catalog.swift in Sources */,
 				262F8F407382D9C3453A128F /* ClassicEngine.swift in Sources */,
 				DE9E5B3C88BC833349D24A15 /* ConsoleEngines.swift in Sources */,
+				B6B04B052BEDBF810F5BD7FD /* EditDetailsView.swift in Sources */,
 				C1AE4F579E0EF7D5D2F13850 /* Game.swift in Sources */,
 				42AFECE002C2E6E4B1DB767C /* GameDetailView.swift in Sources */,
 				56DEB7B0A547083BA232FD8C /* GameLibrary.swift in Sources */,
@@ -503,7 +507,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -522,7 +526,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.0.8;
+				MARKETING_VERSION = 0.0.9;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -612,7 +616,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -625,7 +629,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.0.8;
+				MARKETING_VERSION = 0.0.9;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

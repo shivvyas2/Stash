@@ -16,6 +16,7 @@ struct GameDetailView: View {
     @State private var confirmUninstall = false
     @State private var uninstallSize: String?
     @State private var showArtwork = false
+    @State private var editingDetails = false
     /// Set to show the sound picker; true means play once a speaker is picked
     @State private var soundPicker: Bool?
 
@@ -50,6 +51,7 @@ struct GameDetailView: View {
                 .frame(width: 320)
         }
         .sheet(isPresented: $showArtwork) { ArtworkPicker(game: current) }
+        .sheet(isPresented: $editingDetails) { EditDetailsView(game: current) }
         .sheet(isPresented: Binding(get: { soundPicker != nil }, set: { if !$0 { soundPicker = nil } })) {
             SoundPicker(game: current, playAfter: soundPicker ?? false)
         }
@@ -77,13 +79,15 @@ struct GameDetailView: View {
                 .help("Drop an image here to set the cover")
 
             VStack(alignment: .leading, spacing: 0) {
-                Eyebrow([current.platform.title, current.knownGame?.year].compactMap { $0 }.joined(separator: " — "))
+                Eyebrow([current.platform.title, current.year].compactMap { $0 }.joined(separator: " — "))
                     .padding(.bottom, 10)
                 Text(current.name)
                     .font(.display(40)).tracking(-1.1)
                     .foregroundStyle(Theme.ink)
                     .lineLimit(3)
                     .minimumScaleFactor(0.6)
+                    .onTapGesture(count: 2) { editingDetails = true }
+                    .help("Double-click to edit details")
                     .padding(.bottom, 10)
                 Text(subtitle).font(.system(size: 13)).foregroundStyle(Theme.muted)
                     .padding(.bottom, 22)
@@ -102,6 +106,8 @@ struct GameDetailView: View {
                     }
                     .buttonStyle(SecondaryButtonStyle())
                     Menu {
+                        Button("Edit Details…") { editingDetails = true }
+                        Divider()
                         Button("Find Artwork…") { showArtwork = true }
                         Button("Choose Cover Image…", action: chooseCover)
                         if !current.platform.isConsole {
@@ -268,10 +274,10 @@ private struct ActivityPanel: View {
                     Hairline(color: Theme.nightRaised)
                 }
 
-                if let tips = game.knownGame?.tips, !tips.isEmpty {
+                if !notes.isEmpty {
                     Text("Notes").font(.system(size: 20, weight: .bold)).foregroundStyle(.white)
                         .padding(.top, 36).padding(.bottom, 8)
-                    ForEach(Array(tips.enumerated()), id: \.offset) { index, tip in
+                    ForEach(Array(notes.enumerated()), id: \.offset) { index, tip in
                         HStack(alignment: .top, spacing: 12) {
                             Text(String(format: "%02d", index + 1))
                                 .font(.system(size: 11, weight: .bold)).foregroundStyle(Theme.nightMuted).monospacedDigit()
@@ -289,6 +295,12 @@ private struct ActivityPanel: View {
         }
         .scrollIndicators(.never)
         .background(Theme.night)
+    }
+
+    /// The player's own notes first, then the catalog tips
+    private var notes: [String] {
+        let own = game.notes.isEmpty ? [] : [game.notes]
+        return own + (game.knownGame?.tips ?? [])
     }
 
     private var weekTotal: String {

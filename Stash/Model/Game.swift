@@ -75,6 +75,10 @@ struct Game: Codable, Identifiable, Hashable {
     var executablePath: String
     var arguments: String = ""
     var knownGameID: String?
+    /// Release year the player typed in. Nil falls back to the catalog's year.
+    var customYear: String?
+    /// The player's own notes, shown beside the catalog tips
+    var notes: String = ""
     /// Set for games installed by Steam, which are started through the Steam entry's environment
     var steamAppID: Int?
 
@@ -119,6 +123,8 @@ struct Game: Codable, Identifiable, Hashable {
         platform = value(.platform, Platform.windows)
         arguments = value(.arguments, "")
         knownGameID = value(.knownGameID, String?.none)
+        customYear = value(.customYear, String?.none)
+        notes = value(.notes, "")
         steamAppID = value(.steamAppID, Int?.none)
         // Games added before the classic engine existed are detected from their executable
         if container.contains(.engine) {
@@ -149,6 +155,8 @@ struct Game: Codable, Identifiable, Hashable {
     /// Steam, or a game played through it
     var isSteam: Bool { isSteamClient || steamAppID != nil }
     var knownGame: KnownGame? { knownGameID.flatMap(KnownGame.byID) }
+    /// An empty custom year hides the catalog year
+    var year: String? { customYear.map { $0.isEmpty ? nil : $0 } ?? knownGame?.year }
 
     static let upscaleOptions: [(scale: Int, title: String, detail: String)] = [
         (1, "1×", "Original"), (2, "2×", "HD"), (3, "3×", "Full HD"), (4, "4×", "QHD"), (6, "6×", "4K")
