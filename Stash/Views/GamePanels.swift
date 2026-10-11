@@ -178,10 +178,12 @@ struct GraphicsPanel: View {
                                                 set: { value in library.update(game.id) { $0.widescreen = value } }))
                 }
             } else {
-                SectionHeading(title: "Engine")
-                OptionStrip(options: WineEngine.allCases.map { ($0, $0.title, $0.detail) },
-                            selection: game.engine, select: chooseEngine)
-                    .padding(.bottom, 28)
+                if game.engine != .latest {
+                    SectionHeading(title: "Engine")
+                    OptionStrip(options: WineEngine.selectable.map { ($0, $0.title, $0.detail) },
+                                selection: game.engine, select: chooseEngine)
+                        .padding(.bottom, 28)
+                }
                 if game.engine == .modern {
                     SectionHeading(title: "Renderer")
                     OptionStrip(options: GraphicsMode.allCases.map { ($0, $0.title, $0.detail) },

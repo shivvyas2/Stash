@@ -23,6 +23,7 @@
 		7B687031D8E1102CA8FFE4DE /* StashAudio.dylib in Resources */ = {isa = PBXBuildFile; fileRef = B20E8E8AC51BDD16A930CC33 /* StashAudio.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		9ECC56C74BB3AAF87EF89275 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4C67414020F63ED2BA86DAD /* SidebarView.swift */; };
 		A9E56F1F574C2F6B4E11AA88 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EDE672E25B8A2578B9888FF /* RootView.swift */; };
+		AA65E5695F74D063FCB1E11C /* LatestEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87B953502491E753F3F8666F /* LatestEngine.swift */; };
 		B76FD56C35B005836A3CE63E /* ArtworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0742F3C8D4415B822F666539 /* ArtworkService.swift */; };
 		B790160B7DAAC2FA787342DD /* StashApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18DBCC4E2EF53EB5BDC7A134 /* StashApp.swift */; };
 		B7E8FCFF23E755BFBC119BEE /* AudioDevices.swift in Sources */ = {isa = PBXBuildFile; fileRef = F45287CDFD4D4C9713D85D3F /* AudioDevices.swift */; };
@@ -57,6 +58,7 @@
 		79EFBE932EC0038F0FEB92E5 /* SoundPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPicker.swift; sourceTree = "<group>"; };
 		7EDE672E25B8A2578B9888FF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		814402B58E414F6E9163E3E3 /* ModInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModInstaller.swift; sourceTree = "<group>"; };
+		87B953502491E753F3F8666F /* LatestEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatestEngine.swift; sourceTree = "<group>"; };
 		B20E8E8AC51BDD16A930CC33 /* StashAudio.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = StashAudio.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		C35AB90BCC65F4CEF67D2AC5 /* GameLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameLibrary.swift; sourceTree = "<group>"; };
 		C4C67414020F63ED2BA86DAD /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
@@ -125,6 +127,7 @@
 				4CDE953D9C31D87F9FFE6A5E /* ConsoleEngines.swift */,
 				03AA279E9FAB2449971B4AC8 /* Game.swift */,
 				C35AB90BCC65F4CEF67D2AC5 /* GameLibrary.swift */,
+				87B953502491E753F3F8666F /* LatestEngine.swift */,
 				814402B58E414F6E9163E3E3 /* ModInstaller.swift */,
 				FB8C79443550BD3552737774 /* RuntimeManager.swift */,
 				CEA0F43F29DBFC1696853915 /* Support.swift */,
@@ -288,6 +291,7 @@
 				42AFECE002C2E6E4B1DB767C /* GameDetailView.swift in Sources */,
 				56DEB7B0A547083BA232FD8C /* GameLibrary.swift in Sources */,
 				51366B1C87E7F68D7B885CBC /* GamePanels.swift in Sources */,
+				AA65E5695F74D063FCB1E11C /* LatestEngine.swift in Sources */,
 				1DA9EF8ADF9613E7EA5027BB /* ModInstaller.swift in Sources */,
 				621971823A54B77467B2ACCE /* OnboardingView.swift in Sources */,
 				A9E56F1F574C2F6B4E11AA88 /* RootView.swift in Sources */,
@@ -408,7 +412,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -427,7 +431,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.0.6;
+				MARKETING_VERSION = 0.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -495,7 +499,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -508,7 +512,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.0.6;
+				MARKETING_VERSION = 0.0.7;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

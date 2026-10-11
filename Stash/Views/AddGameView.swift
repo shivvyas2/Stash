@@ -14,7 +14,7 @@ struct AddGameView: View {
     @Environment(\.dismiss) private var dismiss
 
     enum Source: String, CaseIterable, Identifiable {
-        case installer, disc, folder, console
+        case installer, disc, folder, console, steam
         var id: String { rawValue }
 
         var title: String {
@@ -23,6 +23,7 @@ struct AddGameView: View {
             case .disc: return "Disc image"
             case .folder: return "Game folder"
             case .console: return "Console game"
+            case .steam: return "Steam"
             }
         }
 
@@ -32,6 +33,7 @@ struct AddGameView: View {
             case .disc: return "An .iso, .cue or .dmg copied from a game disc"
             case .folder: return "A game that's already installed, e.g. copied from a Windows PC"
             case .console: return "A PlayStation, PS2, PSP, GameCube or Wii game you own"
+            case .steam: return "Install Steam, sign in, and your Steam games appear in your library"
             }
         }
 
@@ -41,6 +43,7 @@ struct AddGameView: View {
             case .disc: return "opticaldisc.fill"
             case .folder: return "folder.fill"
             case .console: return "gamecontroller.fill"
+            case .steam: return "cloud.fill"
             }
         }
     }
@@ -173,6 +176,10 @@ struct AddGameView: View {
     }
 
     private func pick(_ option: Source) {
+        if option == .steam {
+            startSteam()
+            return
+        }
         let panel = NSOpenPanel()
         switch option {
         case .installer:
@@ -189,6 +196,8 @@ struct AddGameView: View {
         case .console:
             panel.allowedContentTypes = Platform.consoleFileExtensions.compactMap { UTType(filenameExtension: $0) }
             panel.message = "Choose the game file (.iso, .chd, .cue, .rvz, .cso, .wbfs…)"
+        case .steam:
+            return
         }
         if panel.runModal() == .OK, let url = panel.url { accept(url, as: option) }
     }
@@ -377,8 +386,8 @@ struct AddGameView: View {
                     } else {
                         searchIn = sourceURL
                     }
-                case .console:
-                    return // handled by startConsole
+                case .console, .steam:
+                    return // handled by startConsole and startSteam
                 }
                 waitingForInstaller = false
 
@@ -397,6 +406,28 @@ struct AddGameView: View {
                 }
             } catch {
                 waitingForInstaller = false
+                failure = error.localizedDescription
+            }
+        }
+    }
+
+    private func startSteam() {
+        if let existing = library.steamClient {
+            library.selection = existing.id
+            dismiss()
+            return
+        }
+        source = .steam
+        name = "Steam"
+        step = .working
+        Task {
+            do {
+                status = ["Getting Steam ready"]
+                try FileManager.default.createDirectory(at: installLocation, withIntermediateDirectories: true)
+                let game = try await library.addSteam(to: installLocation) { line in status.append(line) }
+                addedGame = game
+                step = .done
+            } catch {
                 failure = error.localizedDescription
             }
         }
@@ -552,6 +583,12 @@ struct AddGameView: View {
                           systemImage: "sparkles")
                         .font(.system(size: 12.5))
                         .foregroundStyle(Theme.muted)
+                } else if game.isSteamClient {
+                    Label("Sign in to Steam and install games there. They appear in your Stash library after you close Steam.",
+                          systemImage: "sparkles")
+                        .font(.system(size: 12.5))
+                        .foregroundStyle(Theme.muted)
+                        .multilineTextAlignment(.center)
                 } else if game.knownGame != nil {
                     Label("Stash recognised this game. One-click upgrades are waiting under Enhancements.",
                           systemImage: "sparkles")

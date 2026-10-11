@@ -12,6 +12,7 @@ Add a game from an installer, a disc image, a folder or a console game file, and
 
 - **Windows games.** Runs `.exe` and `.msi` games through Wine and Apple's Game Porting Toolkit. Each game gets its own Windows environment, so games can't break each other.
 - **Classic games.** 32-bit DirectX 7, 8 and 9 games from the 2000s are detected automatically and run on a second engine, CrossOver 24, with full-screen scaling. The game keeps its original resolution and is scaled to fill the display, so it never has to switch the Mac's screen mode.
+- **Steam.** Choose Steam under Add a Game and Stash installs Windows Steam on its own engine. Sign in, install games there, and they appear in your Stash library, launched through Steam.
 - **Console games.** PlayStation, PlayStation 2, PSP, GameCube and Wii games boot straight into fullscreen. The platform is detected from the disc header.
 - **Graphics.** DirectX 8–12 is translated to Metal. Per-game Retina rendering, a performance HUD, and 1×–6× internal resolution for console games.
 - **One-click upgrades** for GTA III, Vice City and San Andreas: widescreen and HUD fixes with SMAA, SilentPatch, and SkyGfx. Every file a mod overwrites is backed up, so removing it restores the original game.
@@ -147,6 +148,14 @@ If a game doesn't start, Stash says why (missing Windows files, a sound device p
 
 The engine can be changed per game under **Graphics**. A game that has run on the classic engine can't switch back, because its environment has been upgraded.
 
+### Steam
+
+Choose **Steam** under Add a Game. Stash downloads its third engine on first use (current Wine Staging, built for macOS by Gcenx, about 180 MB), creates a Windows environment for Steam, and runs Steam's installer silently. Steam needs current Wine: its built-in browser hangs on the Game Porting Toolkit's Wine 7.7, and on CrossOver 24 Steam rejects its own browser's connections.
+
+Games installed in Steam are read from Steam's `appmanifest` files when Stash starts and whenever Steam closes. Each one gets its own entry in the library, played with `steam.exe -applaunch <id>`. Removing a Steam game from Stash only removes the entry; uninstall it in Steam. Removing Steam itself moves its whole environment, including its games, to the Trash.
+
+This engine doesn't have D3DMetal yet, so DirectX 11 and 12 games run slower than on the modern engine. Games with kernel-level anti-cheat don't run on a Mac through Wine at all.
+
 ### Launching a console game
 
 Console engines are open-source emulators that Stash downloads on first use into `~/Library/Application Support/Stash/Engines` and drives from the command line. The engine's own interface stays hidden: the game starts fullscreen in batch mode, and quitting the game returns to Stash.
@@ -199,7 +208,7 @@ project.yml                 XcodeGen project definition
 
 | What | Location |
 |---|---|
-| Library, covers, mod backups, classic and console engines | `~/Library/Application Support/Stash` |
+| Library, covers, mod backups, classic, latest and console engines | `~/Library/Application Support/Stash` |
 | Windows runtime (Wine, D3DMetal, DXVK) | `~/Library/Application Support/app.stash.Stash/Libraries` |
 | Game environments | `~/Games` by default, chosen per game |
 | Wine logs | `~/Library/Logs/app.stash.Stash` |
@@ -212,6 +221,7 @@ Stash started as a fork of [Whisky](https://github.com/Whisky-App/Whisky), which
 - [Wine](https://www.winehq.org) and CodeWeavers' CrossOver sources
 - Apple's [Game Porting Toolkit](https://developer.apple.com/games/game-porting-toolkit/) (D3DMetal), using the builds published by [Gcenx](https://github.com/Gcenx/game-porting-toolkit)
 - The classic engine: CrossOver 24.0.7 built by [Sikarugir](https://github.com/Sikarugir-App/Engines)
+- The latest engine: Wine Staging built for macOS by [Gcenx](https://github.com/Gcenx/macOS_Wine_builds)
 - [dxwrapper](https://github.com/elishacloud/dxwrapper) by elishacloud
 - [DXVK-macOS](https://github.com/Gcenx/DXVK-macOS) and [MoltenVK](https://github.com/KhronosGroup/MoltenVK)
 - [DuckStation](https://github.com/stenzek/duckstation), [PCSX2](https://github.com/PCSX2/pcsx2), [PPSSPP](https://github.com/hrydgard/ppsspp) and [Dolphin](https://dolphin-emu.org)

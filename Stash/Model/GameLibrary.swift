@@ -28,6 +28,8 @@ final class GameLibrary: ObservableObject {
 
     init() {
         load()
+        // Pick up games installed in Steam since Stash last ran
+        if let steam = steamClient { importSteamGames(from: steam.environmentURL) }
     }
 
     subscript(id: Game.ID) -> Game? { games.first { $0.id == id } }
@@ -190,7 +192,9 @@ final class GameLibrary: ObservableObject {
 
     /// True when the game lives in a folder Stash created, rather than a file the player still owns
     nonisolated static func ownsFiles(of game: Game) -> Bool {
-        !game.platform.isConsole || game.environmentPath != game.executablePath
+        // A Steam game lives in the Steam entry's environment, which other Steam games share
+        if game.steamAppID != nil { return false }
+        return !game.platform.isConsole || game.environmentPath != game.executablePath
     }
 
     /// Mac apps Stash exported for this game, found by the game id in their launcher
@@ -215,6 +219,12 @@ final class GameLibrary: ObservableObject {
         if Self.ownsFiles(of: game) { trash.append(game.environmentURL) }
 
         games.removeAll { $0.id == game.id }
+        // Removing Steam removes everything it installed, so its games leave the library too
+        if game.isSteamClient {
+            let installed = games.filter { $0.steamAppID != nil && $0.environmentPath == game.environmentPath }
+            for steamGame in installed { try? FileManager.default.removeItem(at: StashPaths.cover(for: steamGame.id)) }
+            games.removeAll { installed.map(\.id).contains($0.id) }
+        }
         bottles[game.id] = nil
         if selection == game.id { selection = nil }
         save()
@@ -254,6 +264,10 @@ final class GameLibrary: ObservableObject {
         }
         if game.engine == .classic {
             track(id) { try await self.playClassic(game) }
+            return
+        }
+        if game.engine == .latest {
+            track(id) { try await self.playLatest(game) }
             return
         }
 
@@ -338,6 +352,89 @@ final class GameLibrary: ObservableObject {
         update(id) { $0.audioDevice = uid }
     }
 
+    private func playLatest(_ game: Game) async throws {
+        if !LatestEngine.isInstalled {
+            preparing[game.id] = "Downloading the latest engine (about 180 MB, first time only)…"
+            defer { preparing[game.id] = nil }
+            try await LatestEngine.install()
+        }
+        var overrides = [Self.quietOverrides]
+        overrides += game.dllOverrides.map { "\($0)=n,b" }
+        let arguments = game.arguments.split { $0.isWhitespace }.map(String.init)
+        let log = try await LatestEngine.launch(
+            game.executableURL, workingFolder: game.gameFolderURL, arguments: arguments,
+            environment: LatestEngine.environment(prefix: game.environmentURL, overrides: overrides,
+                                                  fpsOverlay: game.fpsOverlay)
+        )
+        let isSteam = game.isSteamClient || game.steamAppID != nil
+        if let text = try? String(contentsOf: log, encoding: .utf8), let reason = Self.startupFailureReason(in: text) {
+            // Steam's browser processes crash and restart on their own; only failures that stop Steam opening count
+            if !isSteam || text.contains(ClassicEngine.noGraphicsDriver) || text.contains("err:module:loader_init") {
+                lastError = "\(game.name) \(reason)\n\nDetails: \(log.path(percentEncoded: false))"
+            }
+        }
+        if isSteam { importSteamGames(from: game.environmentURL) }
+    }
+
+    // MARK: - Steam
+
+    var steamClient: Game? { games.first(where: \.isSteamClient) }
+
+    /// Installs Windows Steam into its own environment on the latest engine and adds it to the library
+    func addSteam(to location: URL, status: @escaping (String) -> Void) async throws -> Game {
+        if let existing = steamClient { return existing }
+        if !LatestEngine.isInstalled {
+            status("Downloading the latest engine (about 180 MB)…")
+            try await LatestEngine.install()
+        }
+        var prefix = location.appending(path: "Steam")
+        var suffix = 2
+        while FileManager.default.fileExists(atPath: prefix.path) {
+            prefix = location.appending(path: "Steam \(suffix)")
+            suffix += 1
+        }
+        status("Preparing Windows…")
+        try await LatestEngine.createPrefix(prefix)
+
+        status("Installing Steam…")
+        let (download, _) = try await URLSession.shared.download(from: Steam.installerURL)
+        let installer = FileManager.default.temporaryDirectory.appending(path: "SteamSetup-\(UUID().uuidString).exe")
+        try FileManager.default.moveItem(at: download, to: installer)
+        defer { try? FileManager.default.removeItem(at: installer) }
+        let environment = LatestEngine.environment(prefix: prefix)
+        try await LatestEngine.run(LatestEngine.wine, [installer.path, "/S"], environment: environment)
+        try await LatestEngine.run(LatestEngine.wineserver, ["-w"], environment: environment)
+        guard FileManager.default.fileExists(atPath: Steam.client(in: prefix).path) else {
+            throw StashError("Steam's installer finished, but Steam wasn't installed.")
+        }
+
+        var game = Game(name: "Steam", environmentPath: prefix.path(percentEncoded: false),
+                        executablePath: Steam.client(in: prefix).path(percentEncoded: false))
+        game.engine = .latest
+        games.append(game)
+        save()
+        setCover(Self.icon(for: game.executableURL), for: game.id)
+        selection = game.id
+        return game
+    }
+
+    /// Adds games Steam has installed that aren't in the library yet. Played through Steam with -applaunch.
+    func importSteamGames(from prefix: URL) {
+        let known = Set(games.compactMap(\.steamAppID))
+        let client = Steam.client(in: prefix).path(percentEncoded: false)
+        let added = Steam.installedGames(in: prefix).filter { !known.contains($0.appID) }
+        for installed in added {
+            var game = Game(name: installed.name, environmentPath: prefix.path(percentEncoded: false),
+                            executablePath: client)
+            game.engine = .latest
+            game.steamAppID = installed.appID
+            game.arguments = "-silent -applaunch \(installed.appID)"
+            games.append(game)
+            fetchArtwork(for: game.id)
+        }
+        if !added.isEmpty { save() }
+    }
+
     /// Switching a game to the modern engine is not offered: an upgraded prefix can't go back to Wine 7.7
     func setEngine(_ engine: WineEngine, for id: Game.ID) {
         update(id) { $0.engine = engine }
@@ -356,8 +453,8 @@ final class GameLibrary: ObservableObject {
             }
             running.remove(id)
             let duration = Date().timeIntervalSince(start)
-            // Classic games check their own logs, since they may have been started more than once
-            if !game.platform.isConsole, game.engine != .classic, duration < 60,
+            // Classic and latest-engine games check their own logs
+            if !game.platform.isConsole, game.engine == .modern, duration < 60,
                let failure = Self.startupFailure(since: start) {
                 lastError = "\(game.name) \(failure.reason)\n\nDetails: \(failure.log.path(percentEncoded: false))"
             }
@@ -411,6 +508,8 @@ final class GameLibrary: ObservableObject {
             engines.stop(game)
         } else if game.engine == .classic {
             ClassicEngine.stop(prefix: game.environmentURL)
+        } else if game.engine == .latest {
+            LatestEngine.stop(prefix: game.environmentURL)
         } else {
             try? Wine.killBottle(bottle: bottle(for: game))
         }
@@ -427,6 +526,13 @@ final class GameLibrary: ObservableObject {
             }
             return
         }
+        if game.engine == .latest {
+            Task {
+                try? await LatestEngine.setRegistry(prefix: game.environmentURL, key: #"HKCU\Software\Wine\Mac Driver"#,
+                                                    name: "RetinaMode", value: enabled ? "y" : "n")
+            }
+            return
+        }
         let bottle = bottle(for: game)
         Task { try? await Wine.changeRetinaMode(bottle: bottle, retinaMode: enabled) }
     }
@@ -436,6 +542,10 @@ final class GameLibrary: ObservableObject {
         update(id) { $0.windowsVersion = version }
         if game.engine == .classic {
             Task { try? await ClassicEngine.setWindowsVersion(prefix: game.environmentURL, version) }
+            return
+        }
+        if game.engine == .latest {
+            Task { try? await LatestEngine.setWindowsVersion(prefix: game.environmentURL, version) }
             return
         }
         let bottle = bottle(for: game)

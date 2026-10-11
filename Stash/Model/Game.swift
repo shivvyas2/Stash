@@ -75,6 +75,8 @@ struct Game: Codable, Identifiable, Hashable {
     var executablePath: String
     var arguments: String = ""
     var knownGameID: String?
+    /// Set for games installed by Steam, which are started through the Steam entry's environment
+    var steamAppID: Int?
 
     var engine: WineEngine = .modern
     /// Set for 32-bit DirectX 7/8/9 games, which get full-screen scaling on the classic engine
@@ -117,6 +119,7 @@ struct Game: Codable, Identifiable, Hashable {
         platform = value(.platform, Platform.windows)
         arguments = value(.arguments, "")
         knownGameID = value(.knownGameID, String?.none)
+        steamAppID = value(.steamAppID, Int?.none)
         // Games added before the classic engine existed are detected from their executable
         if container.contains(.engine) {
             engine = value(.engine, WineEngine.modern)
@@ -141,6 +144,8 @@ struct Game: Codable, Identifiable, Hashable {
     var environmentURL: URL { URL(fileURLWithPath: environmentPath) }
     var executableURL: URL { URL(fileURLWithPath: executablePath) }
     var gameFolderURL: URL { executableURL.deletingLastPathComponent() }
+    /// The Steam client itself, as opposed to a game installed by it
+    var isSteamClient: Bool { engine == .latest && steamAppID == nil && executableURL.lastPathComponent == "steam.exe" }
     var knownGame: KnownGame? { knownGameID.flatMap(KnownGame.byID) }
 
     static let upscaleOptions: [(scale: Int, title: String, detail: String)] = [
