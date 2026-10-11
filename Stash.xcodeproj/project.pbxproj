@@ -25,6 +25,7 @@
 		7B687031D8E1102CA8FFE4DE /* StashAudio.dylib in Resources */ = {isa = PBXBuildFile; fileRef = B20E8E8AC51BDD16A930CC33 /* StashAudio.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		812E70E493B83D19E81A3DD4 /* Displays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D6E5E92BF6DF01F5BFC1E1 /* Displays.swift */; };
 		89B1ED757D3A13D6C661B34E /* StashNet.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 587E34EFEC268347B9F5874A /* StashNet.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		98AEFA925E1ED985F0E9D476 /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5076B88E94F8C6A2560E65D /* AppIcon.swift */; };
 		9ECC56C74BB3AAF87EF89275 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4C67414020F63ED2BA86DAD /* SidebarView.swift */; };
 		A9E56F1F574C2F6B4E11AA88 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EDE672E25B8A2578B9888FF /* RootView.swift */; };
 		B52D65A0065823299D9EA65A /* DiscDrive.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA8F666AD4ED09312317182 /* DiscDrive.swift */; };
@@ -84,6 +85,7 @@
 		CEA0F43F29DBFC1696853915 /* Support.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Support.swift; sourceTree = "<group>"; };
 		D2AE61AC5EA1512CE4C7A4BC /* AddGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddGameView.swift; sourceTree = "<group>"; };
 		D8F8B73046F58ABB5377C370 /* ArtworkPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkPicker.swift; sourceTree = "<group>"; };
+		E5076B88E94F8C6A2560E65D /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
 		EFA8F666AD4ED09312317182 /* DiscDrive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscDrive.swift; sourceTree = "<group>"; };
 		F3BFE30BEA627EB8AB7EB8BE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		F45287CDFD4D4C9713D85D3F /* AudioDevices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioDevices.swift; sourceTree = "<group>"; };
@@ -149,6 +151,7 @@
 		609DEB17A5D3D8C832F2269E /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				E5076B88E94F8C6A2560E65D /* AppIcon.swift */,
 				0742F3C8D4415B822F666539 /* ArtworkService.swift */,
 				F45287CDFD4D4C9713D85D3F /* AudioDevices.swift */,
 				C99D2D2A6F9740ED53280D36 /* Catalog.swift */,
@@ -346,6 +349,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				19C440A4D690582764F7057E /* AddGameView.swift in Sources */,
+				98AEFA925E1ED985F0E9D476 /* AppIcon.swift in Sources */,
 				1459C82357CEFF47ED1159FF /* ArtworkPicker.swift in Sources */,
 				B76FD56C35B005836A3CE63E /* ArtworkService.swift in Sources */,
 				B7E8FCFF23E755BFBC119BEE /* AudioDevices.swift in Sources */,

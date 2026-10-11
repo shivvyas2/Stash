@@ -29,7 +29,7 @@ enum StashPaths {
     }
 
     static var defaultAppsLocation: URL {
-        FileManager.default.homeDirectoryForCurrentUser.appending(path: "Applications")
+        FileManager.default.homeDirectoryForCurrentUser.appending(path: "Applications/Games")
     }
 
     static func cover(for id: UUID) -> URL {

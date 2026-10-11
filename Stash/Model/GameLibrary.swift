@@ -32,6 +32,8 @@ final class GameLibrary: ObservableObject {
         load()
         // Pick up games installed in Steam since Stash last ran
         if let steam = steamClient { importSteamGames(from: steam.environmentURL) }
+        // Apps exported before their cover arrived, or by older Stash builds, get a proper icon
+        for game in games { refreshMacAppIcons(for: game.id, onlyMissing: true) }
     }
 
     subscript(id: Game.ID) -> Game? { games.first { $0.id == id } }
@@ -207,8 +209,10 @@ final class GameLibrary: ObservableObject {
 
     /// Mac apps Stash exported for this game, found by the game id in their launcher
     nonisolated static func macApps(for game: Game) -> [URL] {
-        let folders = [StashPaths.defaultAppsLocation, URL(fileURLWithPath: "/Applications"),
-                       FileManager.default.homeDirectoryForCurrentUser.appending(path: "Desktop")]
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        // ~/Applications is where Stash put games before they got their own folder
+        let folders = [StashPaths.defaultAppsLocation, home.appending(path: "Applications"),
+                       URL(fileURLWithPath: "/Applications"), home.appending(path: "Desktop")]
         return folders.flatMap { folder -> [URL] in
             let apps = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? []
             return apps.filter { app in
@@ -597,6 +601,8 @@ final class GameLibrary: ObservableObject {
         try? png.write(to: StashPaths.cover(for: id))
         covers[id] = nil
         objectWillChange.send()
+        // Covers often land after the Mac app was made, so its icon follows the cover
+        refreshMacAppIcons(for: id)
     }
 
     func hasArtwork(_ id: Game.ID) -> Bool {
@@ -641,6 +647,7 @@ final class GameLibrary: ObservableObject {
             "CFBundleDisplayName": game.name,
             "CFBundleIdentifier": "app.stash.game.\(game.id.uuidString)",
             "CFBundleExecutable": "launch",
+            "CFBundleIconFile": "AppIcon",
             "CFBundlePackageType": "APPL",
             "CFBundleShortVersionString": "1.0",
             "LSApplicationCategoryType": "public.app-category.games",
@@ -653,10 +660,42 @@ final class GameLibrary: ObservableObject {
         try "#!/bin/sh\nopen \"stash://play/\(game.id.uuidString)\"\n".write(to: script, atomically: true, encoding: .utf8)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
 
-        if let cover = cover(for: game.id) {
-            NSWorkspace.shared.setIcon(cover, forFile: app.path, options: [])
-        }
+        try? writeIcon(for: game, into: app)
         return app
+    }
+
+    /// Gives the game's Mac app an icon made from its cover, or from the exe's own icon until a cover arrives
+    func writeIcon(for game: Game, into app: URL) throws {
+        guard let artwork = cover(for: game.id) ?? Self.icon(for: game.executableURL),
+              let image = AppIcon.render(from: artwork) else { return }
+        let contents = app.appending(path: "Contents")
+        let resources = contents.appending(path: "Resources")
+        try FileManager.default.createDirectory(at: resources, withIntermediateDirectories: true)
+        try AppIcon.writeICNS(image, to: resources.appending(path: "AppIcon.icns"))
+
+        // Apps from older Stash builds don't name an icon file
+        let infoURL = contents.appending(path: "Info.plist")
+        if let data = try? Data(contentsOf: infoURL),
+           var info = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+           info["CFBundleIconFile"] as? String != "AppIcon" {
+            info["CFBundleIconFile"] = "AppIcon"
+            try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0).write(to: infoURL)
+        }
+        // A Finder custom icon would hide the bundle's own
+        NSWorkspace.shared.setIcon(nil, forFile: app.path, options: [])
+        // Finder and the Dock cache icons until the bundle looks changed
+        try? FileManager.default.setAttributes([.modificationDate: Date()], ofItemAtPath: app.path)
+        LSRegisterURL(app as CFURL, true)
+    }
+
+    func refreshMacAppIcons(for id: Game.ID, onlyMissing: Bool = false) {
+        guard let game = self[id] else { return }
+        for app in Self.macApps(for: game) {
+            if onlyMissing, FileManager.default.fileExists(atPath: app.appending(path: "Contents/Resources/AppIcon.icns").path) {
+                continue
+            }
+            try? writeIcon(for: game, into: app)
+        }
     }
 
     /// stash://play/<id> launches a game, stash://open/<id> shows its page
@@ -668,6 +707,7 @@ final class GameLibrary: ObservableObject {
 
     nonisolated static func safeFileName(_ name: String) -> String {
         let cleaned = name.components(separatedBy: CharacterSet(charactersIn: "/:\\")).joined(separator: " ")
-        return cleaned.trimmingCharacters(in: .whitespaces).isEmpty ? "Game" : cleaned
+            .split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        return cleaned.isEmpty ? "Game" : cleaned
     }
 }

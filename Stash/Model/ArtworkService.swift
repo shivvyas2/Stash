@@ -111,9 +111,23 @@ enum ArtworkService {
         return image
     }
 
+    /// Download names carry junk like "Full Game By AllTypeHacks" that sends the search to the wrong game
+    static func searchTitle(for name: String) -> String {
+        var title = name
+        for junk in [#"\bfull\s+game\b"#, #"\brepack\b"#, #"\bsetup\b"#, #"\bdemo\b"#, #"\bfor\s+pc\b"#] {
+            title = title.replacingOccurrences(of: junk, with: " ", options: [.regularExpression, .caseInsensitive])
+        }
+        // A trailing "By Uploader" only goes when the name already looked like a download, so "Stand By Me" survives
+        if title != name {
+            title = title.replacingOccurrences(of: #"\s+by\s+\S+\s*$"#, with: "", options: [.regularExpression, .caseInsensitive])
+        }
+        let cleaned = title.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        return cleaned.isEmpty ? name : cleaned
+    }
+
     /// Best-guess cover for a game name: top search hit, top-rated cover
     static func bestCover(for name: String) async throws -> NSImage? {
-        guard let match = try await search(name).first,
+        guard let match = try await search(searchTitle(for: name)).first,
               let cover = try await covers(for: match.id).first else { return nil }
         return try await image(at: cover.url)
     }
