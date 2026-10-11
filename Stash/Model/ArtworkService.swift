@@ -105,6 +105,16 @@ enum ArtworkService {
         ])
     }
 
+    /// Square app icons, a separate set from covers. PNGs only, since .ico files rarely scale up well.
+    static func icons(for gameID: Int) async throws -> [Artwork] {
+        try await get("icons/game/\(gameID)", query: [
+            URLQueryItem(name: "types", value: "static"),
+            URLQueryItem(name: "mimes", value: "image/png"),
+            URLQueryItem(name: "nsfw", value: "false"),
+            URLQueryItem(name: "humor", value: "false")
+        ])
+    }
+
     static func image(at url: URL) async throws -> NSImage {
         let (data, _) = try await URLSession.shared.data(from: url)
         guard let image = NSImage(data: data) else { throw StashError("The artwork couldn't be read.") }

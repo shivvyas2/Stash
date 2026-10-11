@@ -2,7 +2,7 @@
 //  ArtworkPicker.swift
 //  Stash
 //
-//  Search SteamGridDB and pick a cover for a game.
+//  Search SteamGridDB and pick a cover, or an app icon, for a game.
 //
 
 import SwiftUI
@@ -11,6 +11,9 @@ struct ArtworkPicker: View {
     @EnvironmentObject private var library: GameLibrary
     @Environment(\.dismiss) private var dismiss
     let game: Game
+    /// Covers show in Stash; icons go on the game's Mac app. They're separate images.
+    enum Kind { case cover, icon }
+    var kind: Kind = .cover
 
     @State private var query = ""
     @State private var matches: [ArtworkGame] = []
@@ -19,13 +22,16 @@ struct ArtworkPicker: View {
     @State private var loading = false
     @State private var applying: Artwork.ID?
     @State private var message: String?
+    @State private var officialIcons: [(name: String, image: NSImage)] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Artwork").font(.display(28)).tracking(-0.8).foregroundStyle(Theme.ink)
-                    Text("Covers from SteamGridDB").font(.system(size: 13)).foregroundStyle(Theme.muted)
+                    Text(kind == .cover ? "Artwork" : "App Icon").font(.display(28)).tracking(-0.8)
+                        .foregroundStyle(Theme.ink)
+                    Text(kind == .cover ? "Covers from SteamGridDB" : "Icons from SteamGridDB, for the game's Mac app")
+                        .font(.system(size: 13)).foregroundStyle(Theme.muted)
                 }
                 Spacer()
                 Button("Done") { dismiss() }.buttonStyle(TextLinkStyle()).keyboardShortcut(.cancelAction)
@@ -43,6 +49,35 @@ struct ArtworkPicker: View {
                 Button("Search") { Task { await search() } }.buttonStyle(PrimaryButtonStyle(color: Theme.ink))
             }
             .padding(.bottom, 14)
+
+            if kind == .icon && !officialIcons.isEmpty {
+                Text("From the game's files").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.muted)
+                    .padding(.bottom, 8)
+                ScrollView(.horizontal) {
+                    HStack(spacing: 12) {
+                        ForEach(officialIcons.indices, id: \.self) { index in
+                            let icon = officialIcons[index]
+                            Button {
+                                library.setAppIcon(icon.image, for: game.id)
+                                dismiss()
+                            } label: {
+                                VStack(spacing: 4) {
+                                    Image(nsImage: icon.image).resizable().interpolation(.high)
+                                        .aspectRatio(contentMode: .fit).frame(width: 56, height: 56)
+                                    Text(icon.name).font(.system(size: 11)).foregroundStyle(Theme.ink)
+                                        .lineLimit(1).frame(width: 76)
+                                }
+                                .padding(6)
+                                .card(radius: 8)
+                            }
+                            .buttonStyle(.plain)
+                            .help("\(icon.name).exe · \(Int(icon.image.size.width)) px")
+                        }
+                    }
+                }
+                .scrollIndicators(.never)
+                .padding(.bottom, 14)
+            }
 
             if !matches.isEmpty {
                 ScrollView(.horizontal) {
@@ -79,11 +114,11 @@ struct ArtworkPicker: View {
                             ForEach(covers) { cover in
                                 Button { apply(cover) } label: {
                                     AsyncImage(url: cover.thumb) { image in
-                                        image.resizable().aspectRatio(contentMode: .fill)
+                                        image.resizable().aspectRatio(contentMode: kind == .cover ? .fill : .fit)
                                     } placeholder: {
                                         Theme.hairline
                                     }
-                                    .aspectRatio(2 / 3, contentMode: .fit)
+                                    .aspectRatio(kind == .cover ? 2 / 3 : 1, contentMode: .fit)
                                     .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                                     .overlay {
                                         if applying == cover.id {
@@ -104,7 +139,11 @@ struct ArtworkPicker: View {
         .frame(width: 680, height: 600)
         .background(Theme.paper)
         .task {
-            query = game.knownGame?.title ?? game.name
+            query = ArtworkService.searchTitle(for: game.knownGame?.title ?? game.name)
+            if kind == .icon {
+                let game = game
+                officialIcons = await Task.detached { GameLibrary.officialIcons(for: game) }.value
+            }
             await search()
         }
     }
@@ -131,8 +170,14 @@ struct ArtworkPicker: View {
         loading = true
         defer { loading = false }
         do {
-            covers = try await ArtworkService.covers(for: match.id)
-            message = covers.isEmpty ? "No covers for this game yet." : nil
+            switch kind {
+            case .cover:
+                covers = try await ArtworkService.covers(for: match.id)
+                message = covers.isEmpty ? "No covers for this game yet." : nil
+            case .icon:
+                covers = try await ArtworkService.icons(for: match.id)
+                message = covers.isEmpty ? "No icons for this game yet. Try another match above." : nil
+            }
         } catch {
             message = error.localizedDescription
         }
@@ -142,7 +187,11 @@ struct ArtworkPicker: View {
         applying = cover.id
         Task {
             do {
-                library.setCover(try await ArtworkService.image(at: cover.url), for: game.id)
+                let image = try await ArtworkService.image(at: cover.url)
+                switch kind {
+                case .cover: library.setCover(image, for: game.id)
+                case .icon: library.setAppIcon(image, for: game.id)
+                }
                 dismiss()
             } catch {
                 message = error.localizedDescription

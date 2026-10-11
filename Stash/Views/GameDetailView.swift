@@ -16,6 +16,7 @@ struct GameDetailView: View {
     @State private var confirmUninstall = false
     @State private var uninstallSize: String?
     @State private var showArtwork = false
+    @State private var showIconPicker = false
     @State private var editingDetails = false
     @State private var displays = Displays.all()
     /// Set to show the sound picker; true means play once a speaker is picked
@@ -52,6 +53,7 @@ struct GameDetailView: View {
                 .frame(width: 320)
         }
         .sheet(isPresented: $showArtwork) { ArtworkPicker(game: current) }
+        .sheet(isPresented: $showIconPicker) { ArtworkPicker(game: current, kind: .icon) }
         .sheet(isPresented: $editingDetails) { EditDetailsView(game: current) }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)) { _ in
             displays = Displays.all()
@@ -122,7 +124,19 @@ struct GameDetailView: View {
                                 library.setCover(GameLibrary.icon(for: current.executableURL), for: game.id)
                             }
                         }
+                        Divider()
+                        Button("Find App Icon…") { showIconPicker = true }
+                        Button("Choose App Icon Image…", action: chooseAppIcon)
+                        if !current.platform.isConsole {
+                            Button("Use Game Icon as App Icon") {
+                                library.setAppIcon(GameLibrary.icon(for: current.executableURL), for: game.id)
+                            }
+                        }
+                        if library.hasCustomIcon(game.id) {
+                            Button("Make App Icon from Cover") { library.setAppIcon(nil, for: game.id) }
+                        }
                         if current.engine == .classic {
+                            Divider()
                             Button("Sound Output…") { soundPicker = false }
                         }
                         Divider()
@@ -257,6 +271,15 @@ struct GameDetailView: View {
         panel.message = "Choose cover art for \(current.name)"
         if panel.runModal() == .OK, let url = panel.url {
             library.setCover(NSImage(contentsOf: url), for: game.id)
+        }
+    }
+
+    private func chooseAppIcon() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image, .icns]
+        panel.message = "Choose an app icon for \(current.name)"
+        if panel.runModal() == .OK, let url = panel.url {
+            library.setAppIcon(NSImage(contentsOf: url), for: game.id)
         }
     }
 

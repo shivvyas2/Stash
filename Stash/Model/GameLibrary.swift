@@ -234,7 +234,10 @@ final class GameLibrary: ObservableObject {
         // Removing Steam removes everything it installed, so its games leave the library too
         if game.isSteamClient {
             let installed = games.filter { $0.steamAppID != nil && $0.environmentPath == game.environmentPath }
-            for steamGame in installed { try? FileManager.default.removeItem(at: StashPaths.cover(for: steamGame.id)) }
+            for steamGame in installed {
+                try? FileManager.default.removeItem(at: StashPaths.cover(for: steamGame.id))
+                try? FileManager.default.removeItem(at: StashPaths.icon(for: steamGame.id))
+            }
             games.removeAll { installed.map(\.id).contains($0.id) }
         }
         bottles[game.id] = nil
@@ -243,6 +246,7 @@ final class GameLibrary: ObservableObject {
 
         let fileManager = FileManager.default
         try? fileManager.removeItem(at: StashPaths.cover(for: game.id))
+        try? fileManager.removeItem(at: StashPaths.icon(for: game.id))
         covers[game.id] = nil
         try? fileManager.removeItem(at: StashPaths.backups.appending(path: game.id.uuidString))
         for engine in ["pcsx2", "ppsspp"] {
@@ -601,7 +605,34 @@ final class GameLibrary: ObservableObject {
         try? png.write(to: StashPaths.cover(for: id))
         covers[id] = nil
         objectWillChange.send()
-        // Covers often land after the Mac app was made, so its icon follows the cover
+        // Covers often land after the Mac app was made, so its icon follows the cover, unless one was picked
+        if !hasCustomIcon(id) { refreshMacAppIcons(for: id) }
+    }
+
+    // MARK: - App icons
+
+    /// An app icon picked for the game, kept apart from its cover
+    func customIcon(for id: Game.ID) -> NSImage? {
+        NSImage(contentsOf: StashPaths.icon(for: id))
+    }
+
+    func hasCustomIcon(_ id: Game.ID) -> Bool {
+        FileManager.default.fileExists(atPath: StashPaths.icon(for: id).path)
+    }
+
+    /// Sets the game's app icon, or with nil goes back to the one made from the cover.
+    /// Mac apps already made for the game pick it up straight away.
+    func setAppIcon(_ image: NSImage?, for id: Game.ID) {
+        let url = StashPaths.icon(for: id)
+        if let image {
+            guard let tiff = image.tiffRepresentation,
+                  let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) else { return }
+            try? FileManager.default.createDirectory(at: StashPaths.icons, withIntermediateDirectories: true)
+            try? png.write(to: url)
+        } else {
+            try? FileManager.default.removeItem(at: url)
+        }
+        objectWillChange.send()
         refreshMacAppIcons(for: id)
     }
 
@@ -630,6 +661,32 @@ final class GameLibrary: ObservableObject {
     nonisolated static func icon(for executable: URL) -> NSImage? {
         guard let icon = try? PEFile(url: executable).bestIcon(), icon.isValid, icon.size.width > 0 else { return nil }
         return icon
+    }
+
+    /// The official icons inside the game's own .exe files, the game's own first. Slow on big folders, so call it off the main actor.
+    nonisolated static func officialIcons(for game: Game) -> [(name: String, image: NSImage)] {
+        guard !game.platform.isConsole else { return [] }
+        // Installers, crash reporters and runtimes carry their own icons, not the game's
+        let skipped = ["unins", "uninst", "setup", "vcredist", "vc_redist", "dxsetup", "dxwebsetup", "directx",
+                       "crash", "report", "dotnet", "physx", "redist"]
+        var executables = [game.executableURL]
+        if let walker = FileManager.default.enumerator(at: game.gameFolderURL, includingPropertiesForKeys: nil,
+                                                       options: [.skipsHiddenFiles]) {
+            for case let url as URL in walker {
+                if walker.level > 3 { walker.skipDescendants(); continue }
+                let name = url.lastPathComponent.lowercased()
+                guard url.pathExtension.lowercased() == "exe", url != game.executableURL,
+                      !skipped.contains(where: name.contains) else { continue }
+                executables.append(url)
+                if executables.count >= 24 { break }
+            }
+        }
+        var seen = Set<Data>()
+        return executables.compactMap { url in
+            guard let image = icon(for: url), let tiff = image.tiffRepresentation, seen.insert(tiff).inserted
+            else { return nil }
+            return (url.deletingPathExtension().lastPathComponent, image)
+        }
     }
 
     // MARK: - Mac app export
@@ -664,10 +721,17 @@ final class GameLibrary: ObservableObject {
         return app
     }
 
-    /// Gives the game's Mac app an icon made from its cover, or from the exe's own icon until a cover arrives
+    /// Gives the game's Mac app its picked icon, else one made from its cover, else the exe's own icon
     func writeIcon(for game: Game, into app: URL) throws {
-        guard let artwork = cover(for: game.id) ?? Self.icon(for: game.executableURL),
-              let image = AppIcon.render(from: artwork) else { return }
+        let rendered: CGImage?
+        if let picked = customIcon(for: game.id) {
+            rendered = AppIcon.render(icon: picked)
+        } else if let artwork = cover(for: game.id) ?? Self.icon(for: game.executableURL) {
+            rendered = AppIcon.render(from: artwork)
+        } else {
+            rendered = nil
+        }
+        guard let image = rendered else { return }
         let contents = app.appending(path: "Contents")
         let resources = contents.appending(path: "Resources")
         try FileManager.default.createDirectory(at: resources, withIntermediateDirectories: true)

@@ -17,6 +17,8 @@ enum StashPaths {
         .appending(path: "Stash")
     static let library = data.appending(path: "Library.json")
     static let covers = data.appending(path: "Covers")
+    /// App icons picked apart from the cover. Without one, a game's Mac app icon is made from its cover.
+    static let icons = data.appending(path: "Icons")
     static let backups = data.appending(path: "Mod Backups")
     static let engines = data.appending(path: "Engines")
     /// The classic engine's stand-in for CoreAudio, which shows games one speaker. See StashAudio/AudioFilter.c.
@@ -34,6 +36,10 @@ enum StashPaths {
 
     static func cover(for id: UUID) -> URL {
         covers.appending(path: "\(id.uuidString).png")
+    }
+
+    static func icon(for id: UUID) -> URL {
+        icons.appending(path: "\(id.uuidString).png")
     }
 }
 

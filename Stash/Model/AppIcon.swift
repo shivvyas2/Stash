@@ -71,6 +71,33 @@ enum AppIcon {
         return context.makeImage()
     }
 
+    /// Renders an icon the player picked. Shaped icons with see-through corners keep their own shape;
+    /// square ones are cut to the macOS tile so they sit alongside other apps.
+    static func render(icon: NSImage) -> CGImage? {
+        guard let source = icon.cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let context = CGContext(data: nil, width: Int(canvas), height: Int(canvas), bitsPerComponent: 8,
+                                      bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        context.interpolationQuality = .high
+
+        if hasClearCorners(source) {
+            context.draw(source, in: aspectFit(size(of: source), in: tile))
+            return context.makeImage()
+        }
+        let tilePath = CGPath(roundedRect: tile, cornerWidth: tileRadius, cornerHeight: tileRadius, transform: nil)
+        context.saveGState()
+        context.setShadow(offset: CGSize(width: 0, height: -10), blur: 24, color: CGColor(gray: 0, alpha: 0.35))
+        context.addPath(tilePath)
+        context.setFillColor(CGColor(gray: 0.12, alpha: 1))
+        context.fillPath()
+        context.restoreGState()
+        context.addPath(tilePath)
+        context.clip()
+        context.draw(source, in: aspectFill(size(of: source), in: tile))
+        return context.makeImage()
+    }
+
     /// Writes a multi-size .icns, so Finder and the Dock stay sharp at every size
     static func writeICNS(_ image: CGImage, to url: URL) throws {
         let sizes = [16, 32, 128, 256, 512]
@@ -106,6 +133,18 @@ enum AppIcon {
 
     private static func centred(_ size: CGSize, in rect: CGRect) -> CGRect {
         CGRect(x: rect.midX - size.width / 2, y: rect.midY - size.height / 2, width: size.width, height: size.height)
+    }
+
+    /// True when any corner is see-through, meaning the icon already has its own shape
+    private static func hasClearCorners(_ image: CGImage) -> Bool {
+        let side = 32
+        var pixels = [UInt8](repeating: 0, count: side * side * 4)
+        guard let context = CGContext(data: &pixels, width: side, height: side, bitsPerComponent: 8,
+                                      bytesPerRow: side * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return false }
+        context.draw(image, in: CGRect(x: 0, y: 0, width: side, height: side))
+        let corners = [0, side - 1, side * (side - 1), side * side - 1]
+        return corners.contains { pixels[$0 * 4 + 3] < 250 }
     }
 
     private static func blurred(_ image: CGImage) -> CGImage? {
