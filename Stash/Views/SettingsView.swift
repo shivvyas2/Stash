@@ -18,6 +18,9 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            Section("Stash") {
+                LabeledContent("Version", value: Self.appVersion)
+            }
             Section("Games") {
                 LabeledContent("New games install to") {
                     HStack {
@@ -122,6 +125,14 @@ struct SettingsView: View {
             }
             checkingKey = false
         }
+    }
+
+    /// e.g. "0.0.9 (build 9)"
+    private static var appVersion: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "Unknown"
+        guard let build = info?["CFBundleVersion"] as? String else { return version }
+        return "\(version) (build \(build))"
     }
 
     private func addBIOS(for engine: ConsoleEngine) {
