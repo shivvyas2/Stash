@@ -100,12 +100,13 @@ struct GameDetailView: View {
                     if isRunning {
                         Button { library.stop(current) } label: { Label("Stop", systemImage: "stop.fill") }
                             .buttonStyle(PrimaryButtonStyle(color: Theme.ink))
+                            .fixedSize()
                     } else {
                         Button(action: play) { Label("Play", systemImage: "play.fill") }
                             .buttonStyle(PrimaryButtonStyle())
                             .keyboardShortcut(.return, modifiers: [.command])
+                            .fixedSize()
                     }
-                    if displays.count > 1 { displayMenu }
                     Button("Show in Finder") {
                         NSWorkspace.shared.activateFileViewerSelecting([current.executableURL])
                     }
@@ -133,9 +134,22 @@ struct GameDetailView: View {
                     .menuIndicator(.hidden)
                     .frame(width: 32, height: 32)
                     .card(radius: 8)
+                    if displays.count > 1 { displayMenu }
+                }
+                if displays.count > 1 {
+                    Label("Plays on \(playsOn)", systemImage: "display")
+                        .font(.system(size: 11.5)).foregroundStyle(Theme.muted)
+                        .lineLimit(1).truncationMode(.tail)
+                        .padding(.top, 10)
                 }
             }
         }
+    }
+
+    /// The chosen screen, or the menu bar screen when none is chosen or it's unplugged
+    private var playsOn: String {
+        displays.first { $0.key == current.display }?.name
+            ?? NSScreen.screens.first?.localizedName ?? "this screen"
     }
 
     /// Which screen the game plays on, when there's more than one
@@ -152,13 +166,11 @@ struct GameDetailView: View {
             }
             .pickerStyle(.inline)
         } label: {
-            Label(chosen?.name ?? NSScreen.screens.first?.localizedName ?? "Display", systemImage: "display")
-                .font(.system(size: 13, weight: .medium))
+            Image(systemName: "display")
         }
         .menuStyle(.borderlessButton)
-        .fixedSize()
-        .padding(.horizontal, 12)
-        .frame(height: 32)
+        .menuIndicator(.hidden)
+        .frame(width: 32, height: 32)
         .card(radius: 8)
         .help("Choose the screen \(current.name) plays on")
     }
