@@ -42,8 +42,9 @@ enum LegacyAPI: String, Codable, CaseIterable {
         guard let pe = try? PEFile(url: executable), pe.architecture == .x32,
               let data = try? Data(contentsOf: executable) else { return nil }
         let text = String(decoding: data, as: UTF8.self).lowercased()
-        if text.contains("d3d8.dll") { return .d3d8 }
+        // d3d9 first: San Andreas names D3D8.DLL in an error message but draws with DirectX 9
         if text.contains("d3d9.dll") { return .d3d9 }
+        if text.contains("d3d8.dll") { return .d3d8 }
         if text.contains("ddraw.dll") { return .ddraw }
         return nil
     }

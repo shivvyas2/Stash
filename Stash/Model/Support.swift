@@ -57,9 +57,16 @@ enum Shell {
 }
 
 extension URL {
-    /// The path Windows programs see for this macOS location (Wine maps Z: to /)
+    /// The path Windows programs see for this macOS location: C: inside a prefix's drive_c, else Z: (mapped to /).
+    /// Some mods crash on a Z: working folder, like San Andreas with SilentPatch and the widescreen fix.
     var windowsPath: String {
-        "Z:" + path(percentEncoded: false).replacingOccurrences(of: "/", with: "\\")
+        let path = path(percentEncoded: false)
+        if let range = (path + "/").range(of: "/drive_c/", options: .backwards),
+           FileManager.default.fileExists(atPath: path[..<range.lowerBound] + "/dosdevices") {
+            let inside = (path + "/")[range.upperBound...].split(separator: "/").joined(separator: "\\")
+            return "C:\\" + inside
+        }
+        return "Z:" + path.replacingOccurrences(of: "/", with: "\\")
     }
 
     var folderSize: Int64 {
