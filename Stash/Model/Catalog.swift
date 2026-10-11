@@ -36,10 +36,11 @@ struct KnownGame: Identifiable {
             id: "gtavc", title: "Grand Theft Auto: Vice City",
             executables: ["gta-vc.exe", "gta_vc.exe"], year: "2002",
             color: Color(hex: 0xE0408A),
-            mods: ["widescreen-vc", "silentpatch-vc"],
+            mods: ["widescreen-vc", "silentpatch-vc", "cheats-vc"],
             tips: [
                 "Enhancements need the original v1.0 gta-vc.exe.",
-                "The widescreen fix also removes loading screens between islands."
+                "The widescreen fix also removes loading screens between islands.",
+                "With Cheat codes installed, type IMMORTAL or NOCOPS while playing. Type it again to turn it off."
             ]
         ),
         KnownGame(
@@ -192,6 +193,13 @@ struct ModPackage: Identifiable {
             id: "silentpatch-vc", title: "SilentPatch",
             summary: "Fixes bugs and restores effects missing from the PC port",
             url: URL(string: silentPatch + "SilentPatchVC.zip")!
+        ),
+        ModPackage(
+            id: "cheats-vc", title: "Cheat codes",
+            summary: "Type IMMORTAL for unlimited health, NOCOPS so the police never chase you. Needs Widescreen & HD.",
+            // Built by StashCheats/build.sh and shipped inside Stash
+            url: Bundle.main.url(forResource: "StashCheatsVC", withExtension: "zip")
+                ?? URL(fileURLWithPath: "/nonexistent/StashCheatsVC.zip")
         ),
         ModPackage(
             id: "widescreen-iii", title: "Widescreen & HD",

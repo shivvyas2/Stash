@@ -13,8 +13,8 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "0.0.7"
-    CURRENT_PROJECT_VERSION: "7"
+    MARKETING_VERSION: "0.0.8"
+    CURRENT_PROJECT_VERSION: "8"
 targets:
   Stash:
     type: application
