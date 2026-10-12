@@ -30,12 +30,17 @@ final class RuntimeManager: NSObject, ObservableObject {
 
     override init() {
         super.init()
-        phase = isInstalled ? .ready : .idle
+        // A macOS update can remove Rosetta after the runtime is installed. Games then exit without a word.
+        if !Rosetta2.isRosettaInstalled {
+            phase = .needsRosetta
+        } else {
+            phase = isInstalled ? .ready : .idle
+        }
     }
 
     func checkForUpdate() async {
         let (needsUpdate, _) = await WhiskyWineInstaller.shouldUpdateWhiskyWine()
-        if needsUpdate { phase = .idle }
+        if needsUpdate, phase != .needsRosetta { phase = .idle }
     }
 
     func start() {
@@ -50,7 +55,7 @@ final class RuntimeManager: NSObject, ObservableObject {
         Task {
             do {
                 if try await Rosetta2.installRosetta() {
-                    download()
+                    if isInstalled { phase = .ready } else { download() }
                 } else {
                     phase = .failed("Rosetta 2 could not be installed.")
                 }

@@ -25,7 +25,7 @@ Add a game from an installer, a disc image, a folder or a console game file, and
 
 - A Mac with Apple Silicon (M1 or later)
 - macOS 14 Sonoma or later
-- Rosetta 2 (Stash offers to install it)
+- Rosetta 2, Apple's Intel-to-Apple-Silicon translator. Windows games run on Intel builds of Wine, so they can't start without it. Apple doesn't allow Rosetta to be bundled with other apps, so Stash checks for it on every launch and installs it from Apple with one click if it's missing.
 - About 250 MB for the Windows runtime, downloaded on first launch
 
 ## Install
@@ -37,6 +37,16 @@ Stash is not notarized yet, so macOS blocks the first launch. Right-click the ap
 ```sh
 xattr -dr com.apple.quarantine /Applications/Stash.app
 ```
+
+### Rosetta 2
+
+If Rosetta isn't installed, Stash shows an **Install Rosetta** button before anything else. You can also install it yourself:
+
+```sh
+softwareupdate --install-rosetta --agree-to-license
+```
+
+Major macOS updates can remove Rosetta. If games stop opening after an update, with no error and nothing in the window, reinstall Rosetta with the command above or reopen Stash and click **Install Rosetta**.
 
 ## Build from source
 
