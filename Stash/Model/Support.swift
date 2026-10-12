@@ -50,6 +50,12 @@ enum Mac {
         var size = MemoryLayout<Int32>.size
         return sysctlbyname("hw.optional.arm64", &value, &size, nil, 0) == 0 && value == 1
     }()
+
+    /// Read each time, unlike WhiskyKit's cached flag: Rosetta can be installed, or removed by a macOS update,
+    /// while Stash is open
+    static var hasRosetta: Bool {
+        FileManager.default.fileExists(atPath: "/Library/Apple/usr/libexec/oah/libRosettaRuntime")
+    }
 }
 
 enum Shell {

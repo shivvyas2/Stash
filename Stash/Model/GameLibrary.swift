@@ -276,6 +276,10 @@ final class GameLibrary: ObservableObject {
             lastError = "\(game.name) can't be found at \(game.executablePath). It may have been moved or deleted."
             return
         }
+        if !game.platform.isConsole, !Mac.hasRosetta {
+            NotificationCenter.default.post(name: .stashNeedsRosetta, object: nil)
+            return
+        }
         if game.platform.isConsole {
             track(id) { try await self.engines.run(game) }
             return

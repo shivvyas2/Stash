@@ -40,7 +40,7 @@ xattr -dr com.apple.quarantine /Applications/Stash.app
 
 ### Rosetta 2
 
-If Rosetta isn't installed, Stash shows an **Install Rosetta** button before anything else. You can also install it yourself:
+Stash checks your Mac when it opens, each time you switch back to it, and when you press Play. If Rosetta is missing, it explains what Rosetta is and shows an **Install Rosetta** button. One click downloads it from Apple, usually in about a minute, and your library comes back when it's done. Intel Macs get a message saying Stash needs Apple Silicon. You can also install Rosetta yourself:
 
 ```sh
 softwareupdate --install-rosetta --agree-to-license

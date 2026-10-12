@@ -69,12 +69,27 @@ struct OnboardingView: View {
                 Text("Downloads the game engine, about 240 MB.")
                     .font(.system(size: 12)).foregroundStyle(Theme.muted)
             }
+        case .unsupportedMac:
+            notice("This Mac isn't supported",
+                   "Stash needs a Mac with Apple Silicon (M1 or later). Windows games rely on Apple's "
+                   + "Game Porting Toolkit, which doesn't run on Intel Macs.")
         case .needsRosetta:
-            HStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 20) {
+                notice(runtime.isInstalled ? "Rosetta 2 is missing" : "One step first: Rosetta 2",
+                       (runtime.isInstalled
+                        ? "macOS updates can remove it, and Windows games can't open without it. "
+                          + "Your games and saves are untouched. "
+                        : "Windows games are built for Intel processors. ")
+                       + "Rosetta 2 is Apple's free translator that lets them run on your Mac. "
+                       + "It installs from Apple in about a minute.")
                 Button("Install Rosetta") { runtime.installRosetta() }
                     .buttonStyle(PrimaryButtonStyle(color: Theme.ink))
-                Text("Apple's Rosetta 2 is needed to run Windows games.")
-                    .font(.system(size: 12)).foregroundStyle(Theme.muted)
+                    .keyboardShortcut(.defaultAction)
+            }
+        case .installingRosetta:
+            HStack(spacing: 12) {
+                ProgressView().controlSize(.small)
+                Text("Installing Rosetta 2 from Apple…").font(.system(size: 13)).foregroundStyle(Theme.muted)
             }
         case .downloading:
             VStack(alignment: .leading, spacing: 10) {
@@ -108,6 +123,15 @@ struct OnboardingView: View {
                     .buttonStyle(PrimaryButtonStyle(color: Theme.ink))
             }
         }
+    }
+
+    private func notice(_ title: String, _ detail: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.ink)
+            Text(detail).font(.system(size: 13)).foregroundStyle(Theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: 460, alignment: .leading)
     }
 
     private func bytes(_ count: Int64) -> String {

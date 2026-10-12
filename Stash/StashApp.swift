@@ -78,4 +78,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 extension Notification.Name {
     static let stashAddGame = Notification.Name("stashAddGame")
+    /// Posted when a Windows game is played without Rosetta, so the window can offer to install it
+    static let stashNeedsRosetta = Notification.Name("stashNeedsRosetta")
 }

@@ -12,7 +12,9 @@ import WhiskyKit
 final class RuntimeManager: NSObject, ObservableObject {
     enum Phase: Equatable {
         case idle
+        case unsupportedMac
         case needsRosetta
+        case installingRosetta
         case downloading
         case installing
         case ready
@@ -31,36 +33,42 @@ final class RuntimeManager: NSObject, ObservableObject {
     override init() {
         super.init()
         // A macOS update can remove Rosetta after the runtime is installed. Games then exit without a word.
-        if !Rosetta2.isRosettaInstalled {
+        if !Mac.isAppleSilicon {
+            phase = .unsupportedMac
+        } else if !Mac.hasRosetta {
             phase = .needsRosetta
         } else {
             phase = isInstalled ? .ready : .idle
         }
     }
 
+    /// Sends the library back to the Rosetta step when Rosetta has gone missing since launch
+    func recheckRosetta() {
+        if phase == .ready, Mac.isAppleSilicon, !Mac.hasRosetta { phase = .needsRosetta }
+    }
+
     func checkForUpdate() async {
         let (needsUpdate, _) = await WhiskyWineInstaller.shouldUpdateWhiskyWine()
-        if needsUpdate, phase != .needsRosetta { phase = .idle }
+        if needsUpdate, phase == .ready { phase = .idle }
     }
 
     func start() {
-        guard Rosetta2.isRosettaInstalled else {
+        guard Mac.hasRosetta else {
             phase = .needsRosetta
             return
         }
-        download()
+        if isInstalled, phase != .idle { phase = .ready } else { download() }
     }
 
     func installRosetta() {
+        phase = .installingRosetta
         Task {
-            do {
-                if try await Rosetta2.installRosetta() {
-                    if isInstalled { phase = .ready } else { download() }
-                } else {
-                    phase = .failed("Rosetta 2 could not be installed.")
-                }
-            } catch {
-                phase = .failed(error.localizedDescription)
+            let succeeded = (try? await Rosetta2.installRosetta()) ?? false
+            if succeeded, Mac.hasRosetta {
+                if isInstalled { phase = .ready } else { download() }
+            } else {
+                phase = .failed("Rosetta 2 couldn't be installed. Check your internet connection and try again, "
+                                + "or run softwareupdate --install-rosetta --agree-to-license in Terminal.")
             }
         }
     }

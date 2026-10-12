@@ -49,6 +49,12 @@ struct RootView: View {
             Text(library.lastError ?? "")
         }
         .task { await runtime.checkForUpdate() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            runtime.recheckRosetta()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .stashNeedsRosetta)) { _ in
+            runtime.recheckRosetta()
+        }
     }
 }
 
